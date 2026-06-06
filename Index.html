@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calitree — Calisthenics Skill Tree</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --s0:#080808;--s1:#0c0c0c;--s2:#101010;--s3:#141414;--s4:#1a1a1a;--s5:#202020;
+  --b1:rgba(255,255,255,.055);--b2:rgba(255,255,255,.09);--b3:rgba(255,255,255,.14);
+  --tx0:#f2f2f2;--tx1:#a8a8a8;--tx2:#666;--tx3:#3a3a3a;
+  --a:#22c55e;--a-dim:rgba(34,197,94,.08);--a-border:rgba(34,197,94,.18);
+  --lg:#e8a020;
+  --r1:4px;--r2:6px;--r3:8px;--r4:12px;--r5:16px;
+  --f:'Geist',-apple-system,sans-serif;--fm:'Geist Mono','JetBrains Mono',monospace;
+}
+html{scroll-behavior:smooth;background:var(--s0)}
+body{color:var(--tx0);font-family:var(--f);-webkit-font-smoothing:antialiased;font-size:14px;line-height:1.6;overflow-x:hidden}
+
+/* ── NAV ── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  height:52px;background:rgba(8,8,8,.88);
+  border-bottom:1px solid var(--b1);backdrop-filter:blur(16px);
+  display:flex;align-items:center;padding:0 24px;
+}
+.nav-brand{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--tx0);letter-spacing:-.01em;text-decoration:none}
+.nav-icon{width:24px;height:24px;background:var(--s4);border:1px solid var(--b2);border-radius:var(--r2);display:flex;align-items:center;justify-content:center}
+.nav-icon svg{width:12px;height:12px;stroke:var(--tx1)}
+.nav-right{margin-left:auto;display:flex;gap:8px;align-items:center}
+.nav-link{padding:6px 14px;border-radius:var(--r2);border:1px solid var(--b1);background:transparent;color:var(--tx2);font-family:var(--f);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;text-decoration:none;display:inline-flex;align-items:center}
+.nav-link:hover{border-color:var(--b2);color:var(--tx1);background:var(--s3)}
+.nav-link.primary{border-color:var(--b2);background:var(--s3);color:var(--tx0)}
+.nav-link.primary:hover{border-color:var(--b3);background:var(--s4)}
+
+/* ── HERO ── */
+.hero{
+  min-height:100vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:100px 24px 80px;text-align:center;position:relative;
+}
+.hero-bg{
+  position:absolute;inset:0;
+  background-image:radial-gradient(circle,rgba(255,255,255,.03) 1px,transparent 1px);
+  background-size:32px 32px;
+  -webkit-mask-image:radial-gradient(ellipse 80% 60% at 50% 50%,#000 0%,transparent 100%);
+  mask-image:radial-gradient(ellipse 80% 60% at 50% 50%,#000 0%,transparent 100%);
+}
+.hero-content{position:relative;z-index:1;max-width:600px}
+.hero-chip{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:5px 12px;border-radius:20px;
+  border:1px solid var(--b2);background:var(--s3);
+  font-family:var(--fm);font-size:10px;color:var(--tx2);
+  letter-spacing:.08em;text-transform:uppercase;margin-bottom:32px;
+}
+.hero-chip-dot{width:5px;height:5px;border-radius:50%;background:var(--a)}
+h1{
+  font-size:clamp(32px,5.5vw,56px);
+  font-weight:600;letter-spacing:-.03em;
+  color:var(--tx0);line-height:1.08;margin-bottom:18px;
+}
+h1 .muted{color:var(--tx3);font-weight:400}
+.hero-sub{
+  font-size:15px;line-height:1.7;color:var(--tx2);
+  max-width:440px;margin:0 auto 36px;font-weight:400;
+}
+.hero-cta{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.btn{
+  padding:10px 22px;border-radius:var(--r2);
+  font-family:var(--f);font-size:13px;font-weight:500;
+  cursor:pointer;transition:all .15s;text-decoration:none;
+  display:inline-flex;align-items:center;gap:7px;
+  border:1px solid var(--b1);
+}
+.btn svg{width:13px;height:13px;stroke:currentColor;flex-shrink:0}
+.btn-primary{background:var(--tx0);border-color:var(--tx0);color:#000}
+.btn-primary:hover{background:#e8e8e8;transform:translateY(-1px)}
+.btn-secondary{background:transparent;border-color:var(--b2);color:var(--tx1)}
+.btn-secondary:hover{border-color:var(--b3);color:var(--tx0);background:var(--s3)}
+
+/* ── TREE PREVIEW ── */
+.hero-preview{
+  position:relative;margin:56px auto 0;max-width:680px;width:100%;
+}
+.preview-frame{
+  background:var(--s1);border:1px solid var(--b2);border-radius:var(--r5);
+  overflow:hidden;aspect-ratio:16/9;position:relative;
+}
+.preview-bar{
+  height:32px;border-bottom:1px solid var(--b1);background:var(--s2);
+  display:flex;align-items:center;padding:0 12px;gap:6px;
+}
+.preview-dot{width:8px;height:8px;border-radius:50%;background:var(--b2)}
+.preview-title{flex:1;text-align:center;font-family:var(--fm);font-size:9px;color:var(--tx3);letter-spacing:.08em}
+.preview-svg-wrap{padding:16px;height:calc(100% - 32px);display:flex;align-items:center;justify-content:center}
+.preview-fade{position:absolute;bottom:0;left:0;right:0;height:40%;background:linear-gradient(transparent,var(--s1));pointer-events:none}
+
+/* ── STATS STRIP ── */
+.stats-strip{
+  border-top:1px solid var(--b1);border-bottom:1px solid var(--b1);
+  padding:28px 24px;display:flex;justify-content:center;gap:0;
+  background:var(--s1);
+}
+.stat-item{
+  flex:1;max-width:180px;text-align:center;
+  padding:0 20px;
+  border-right:1px solid var(--b1);
+}
+.stat-item:last-child{border-right:none}
+.stat-num{font-size:28px;font-weight:600;color:var(--tx0);letter-spacing:-.02em;font-family:var(--fm);line-height:1}
+.stat-lbl{font-size:11px;color:var(--tx2);margin-top:5px;letter-spacing:.04em}
+
+/* ── SECTION SHARED ── */
+.section{padding:80px 24px;max-width:1000px;margin:0 auto}
+.section-eyebrow{font-family:var(--fm);font-size:10px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--tx2);margin-bottom:12px}
+.section-title{font-size:clamp(22px,3vw,32px);font-weight:600;letter-spacing:-.02em;color:var(--tx0);line-height:1.15;margin-bottom:16px}
+.section-sub{font-size:14px;color:var(--tx2);max-width:480px;line-height:1.7}
+
+/* ── HOW IT WORKS ── */
+.how-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1px;background:var(--b1);border:1px solid var(--b1);border-radius:var(--r4);overflow:hidden;margin-top:40px}
+.how-card{background:var(--s1);padding:24px;transition:background .15s}
+.how-card:hover{background:var(--s2)}
+.how-num{font-family:var(--fm);font-size:10px;color:var(--tx3);margin-bottom:12px;letter-spacing:.08em}
+.how-icon{width:32px;height:32px;border-radius:var(--r2);background:var(--s4);border:1px solid var(--b1);display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+.how-icon svg{width:14px;height:14px;stroke:var(--tx1)}
+.how-title{font-size:13px;font-weight:600;color:var(--tx0);margin-bottom:6px;letter-spacing:-.01em}
+.how-desc{font-size:12px;color:var(--tx2);line-height:1.65}
+
+/* ── TIER TABLE ── */
+.tier-section{background:var(--s1);border-top:1px solid var(--b1);border-bottom:1px solid var(--b1);padding:80px 24px}
+.tier-inner{max-width:1000px;margin:0 auto}
+.tier-table{margin-top:36px;border:1px solid var(--b1);border-radius:var(--r4);overflow:hidden}
+.tier-row{display:grid;grid-template-columns:44px 120px 1fr auto;gap:0;border-bottom:1px solid var(--b1);align-items:center;transition:background .12s}
+.tier-row:last-child{border-bottom:none}
+.tier-row:hover{background:var(--s2)}
+.tier-cell{padding:12px 16px;font-size:12px}
+.tier-cell.num{font-family:var(--fm);font-size:10px;color:var(--tx3);text-align:center}
+.tier-cell.name{font-weight:600;color:var(--tx0)}
+.tier-cell.skills-list{color:var(--tx2)}
+.tier-cell.badge{}
+.tier-badge{padding:2px 8px;border-radius:var(--r1);font-family:var(--fm);font-size:9px;letter-spacing:.04em;border:1px solid var(--b1);color:var(--tx3)}
+.tier-badge.legendary{border-color:rgba(232,160,32,.2);color:var(--lg);background:rgba(232,160,32,.06)}
+
+/* ── AUTH ── */
+.auth-section{padding:80px 24px;display:flex;flex-direction:column;align-items:center}
+.auth-card{
+  width:100%;max-width:380px;
+  background:var(--s1);border:1px solid var(--b2);
+  border-radius:var(--r5);overflow:hidden;
+}
+.auth-card-top{padding:24px 24px 20px;border-bottom:1px solid var(--b1)}
+.auth-card-title{font-size:18px;font-weight:600;letter-spacing:-.02em;color:var(--tx0);margin-bottom:4px}
+.auth-card-sub{font-size:12px;color:var(--tx2);line-height:1.5}
+.auth-tabs{display:flex;gap:2px;background:var(--s3);border-radius:var(--r2);padding:3px;margin-bottom:0;border:1px solid var(--b1)}
+.auth-tab{flex:1;padding:7px;text-align:center;border-radius:var(--r1);font-size:12px;font-weight:500;color:var(--tx2);cursor:pointer;transition:all .15s;border:none;background:none;font-family:var(--f)}
+.auth-tab.active{background:var(--s2);color:var(--tx0);border:1px solid var(--b1)}
+.auth-body{padding:20px 24px}
+.auth-fields{display:flex;flex-direction:column;gap:12px}
+.field{display:flex;flex-direction:column;gap:5px}
+.field-label{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--tx2);font-family:var(--fm)}
+.field-input{
+  background:var(--s3);border:1px solid var(--b1);border-radius:var(--r2);
+  padding:9px 11px;color:var(--tx0);font-family:var(--f);font-size:13px;
+  outline:none;transition:border-color .15s;width:100%;
+}
+.field-input:focus{border-color:var(--b3)}
+.field-input::placeholder{color:var(--tx3)}
+.field-hint{font-size:10px;color:var(--tx3);font-family:var(--fm)}
+.auth-error{
+  font-size:11px;color:#f87171;font-family:var(--fm);padding:8px 10px;
+  background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);
+  border-radius:var(--r1);display:none;
+}
+.auth-error.show{display:block}
+.auth-success{
+  font-size:11px;color:var(--a);font-family:var(--fm);padding:8px 10px;
+  background:var(--a-dim);border:1px solid var(--a-border);
+  border-radius:var(--r1);display:none;
+}
+.auth-success.show{display:block}
+.auth-submit{
+  width:100%;padding:10px;border-radius:var(--r2);border:none;
+  background:var(--tx0);color:#000;font-family:var(--f);
+  font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;margin-top:4px;
+}
+.auth-submit:hover{background:#e8e8e8}
+.auth-submit:disabled{opacity:.5;cursor:not-allowed}
+.auth-divider{text-align:center;font-size:11px;color:var(--tx3);font-family:var(--fm);padding:2px 0}
+.auth-guest{
+  width:100%;padding:9px;border-radius:var(--r2);
+  border:1px solid var(--b1);background:transparent;
+  color:var(--tx2);font-family:var(--f);font-size:12px;font-weight:500;
+  cursor:pointer;transition:all .15s;
+}
+.auth-guest:hover{border-color:var(--b2);color:var(--tx1);background:var(--s3)}
+
+/* ── FOOTER ── */
+footer{
+  padding:32px 24px;border-top:1px solid var(--b1);
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;
+  background:var(--s0);
+}
+.foot-brand{font-size:12px;font-weight:600;color:var(--tx3);letter-spacing:.04em}
+.foot-copy{font-size:11px;color:var(--tx3);font-family:var(--fm)}
+
+@media(max-width:600px){
+  .hero-cta{flex-direction:column;align-items:center}
+  .btn{width:100%;justify-content:center;max-width:280px}
+  .stats-strip{gap:0;flex-wrap:wrap}
+  .stat-item{min-width:140px}
+  .tier-table{font-size:11px}
+  .tier-row{grid-template-columns:32px 100px 1fr}
+  .tier-cell.badge{display:none}
+  nav{padding:0 14px}
+  .section{padding:60px 16px}
+}
+
+/* ── PREVIEW CARDS ── */
+.preview-frame{background:var(--s1);border:1px solid var(--b2);border-radius:var(--r5);overflow:hidden}
+.preview-bar{height:32px;border-bottom:1px solid var(--b1);background:var(--s2);display:flex;align-items:center;padding:0 12px;gap:6px}
+.preview-dot{width:8px;height:8px;border-radius:50%;background:var(--b2)}
+.preview-title{flex:1;text-align:center;font-family:var(--fm);font-size:9px;color:var(--tx3);letter-spacing:.08em}
+.preview-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:0;padding:16px;gap:12px}
+.preview-col{display:flex;flex-direction:column;gap:6px}
+.preview-col-label{font-family:var(--fm);font-size:9px;font-weight:600;letter-spacing:.12em;margin-bottom:4px;padding-left:2px}
+.pc{background:var(--s2);border:1px solid var(--b1);border-radius:5px;padding:7px 9px;display:flex;flex-direction:column;gap:5px}
+.pc.done{background:rgba(46,204,113,.07);border-color:rgba(46,204,113,.2)}
+.pc.avail{background:var(--s3);border-color:var(--b2)}
+.pc-dot{width:4px;height:4px;border-radius:50%;flex-shrink:0}
+.pc-name{font-size:10px;font-weight:500;color:var(--tx3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pc.done .pc-name{color:var(--a)}
+.pc.avail .pc-name{color:var(--tx0)}
+.pc-bar{height:1.5px;background:var(--b1);border-radius:1px;overflow:hidden}
+.pc-fill{height:100%;border-radius:1px}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-brand" href="#">
+    <div class="nav-icon">
+      <svg viewBox="0 0 12 12" fill="none" stroke-width="1.5" stroke-linecap="round">
+        <circle cx="6" cy="2" r="1"/><circle cx="2" cy="9" r="1"/><circle cx="10" cy="9" r="1"/>
+        <line x1="6" y1="3" x2="2.8" y2="8"/><line x1="6" y1="3" x2="9.2" y2="8"/>
+      </svg>
+    </div>
+    Calitree
+  </a>
+  <div class="nav-right">
+    <a class="nav-link" href="#how">How it works</a>
+    <a class="nav-link primary" href="#auth">Get started</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <div class="hero-chip"><span class="hero-chip-dot"></span>78 skills across 9 tiers</div>
+    <h1>Master calisthenics<br><span class="muted">one unlock at a time</span></h1>
+    <p class="hero-sub">A skill tree that maps your entire bodyweight training journey. Every skill has prerequisites. Every rep counts. Your progress is always clear.</p>
+    <div class="hero-cta">
+      <a class="btn btn-primary" href="#auth">
+        <svg viewBox="0 0 16 16" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v12M2 8h12"/></svg>
+        Start training
+      </a>
+      <a class="btn btn-secondary" href="#how">
+        See how it works
+      </a>
+    </div>
+  </div>
+
+  <div class="hero-preview">
+    <!-- Simple skill card preview — no SVG complexity -->
+    <div class="preview-frame">
+      <div class="preview-bar">
+        <div class="preview-dot"></div><div class="preview-dot"></div><div class="preview-dot"></div>
+        <span class="preview-title">Calitree</span>
+      </div>
+      <div class="preview-cards">
+        <div class="preview-col">
+          <div class="preview-col-label" style="color:#6e8cfb">PUSH</div>
+          <div class="pc done"><div class="pc-dot" style="background:#6e8cfb"></div><div class="pc-name">Wall Push-up</div><div class="pc-bar"><div class="pc-fill" style="width:100%;background:rgba(46,204,113,.3)"></div></div></div>
+          <div class="pc done"><div class="pc-dot" style="background:#6e8cfb"></div><div class="pc-name">Push-up</div><div class="pc-bar"><div class="pc-fill" style="width:100%;background:rgba(46,204,113,.3)"></div></div></div>
+          <div class="pc avail"><div class="pc-dot" style="background:#6e8cfb"></div><div class="pc-name">Pike Push-up</div><div class="pc-bar"><div class="pc-fill" style="width:60%;background:rgba(255,255,255,.15)"></div></div></div>
+          <div class="pc lock"><div class="pc-dot" style="background:#6e8cfb;opacity:.3"></div><div class="pc-name" style="opacity:.35">One-Arm Push-up</div><div class="pc-bar"></div></div>
+        </div>
+        <div class="preview-col">
+          <div class="preview-col-label" style="color:#2ecc71">PULL</div>
+          <div class="pc done"><div class="pc-dot" style="background:#2ecc71"></div><div class="pc-name">Dead Hang</div><div class="pc-bar"><div class="pc-fill" style="width:100%;background:rgba(46,204,113,.3)"></div></div></div>
+          <div class="pc done"><div class="pc-dot" style="background:#2ecc71"></div><div class="pc-name">Pull-up</div><div class="pc-bar"><div class="pc-fill" style="width:100%;background:rgba(46,204,113,.3)"></div></div></div>
+          <div class="pc avail"><div class="pc-dot" style="background:#2ecc71"></div><div class="pc-name">Wide Pull-up</div><div class="pc-bar"><div class="pc-fill" style="width:30%;background:rgba(255,255,255,.15)"></div></div></div>
+          <div class="pc lock"><div class="pc-dot" style="background:#2ecc71;opacity:.3"></div><div class="pc-name" style="opacity:.35">Muscle-up ★</div><div class="pc-bar"></div></div>
+        </div>
+        <div class="preview-col">
+          <div class="preview-col-label" style="color:#f97316">CORE</div>
+          <div class="pc done"><div class="pc-dot" style="background:#f97316"></div><div class="pc-name">Plank</div><div class="pc-bar"><div class="pc-fill" style="width:100%;background:rgba(46,204,113,.3)"></div></div></div>
+          <div class="pc avail"><div class="pc-dot" style="background:#f97316"></div><div class="pc-name">Hollow Body</div><div class="pc-bar"><div class="pc-fill" style="width:80%;background:rgba(255,255,255,.15)"></div></div></div>
+          <div class="pc lock"><div class="pc-dot" style="background:#f97316;opacity:.3"></div><div class="pc-name" style="opacity:.35">L-Sit Hold</div><div class="pc-bar"></div></div>
+          <div class="pc lock"><div class="pc-dot" style="background:#f97316;opacity:.3"></div><div class="pc-name" style="opacity:.35">Front Lever ★</div><div class="pc-bar"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- STATS STRIP -->
+<div class="stats-strip">
+  <div class="stat-item"><div class="stat-num">78</div><div class="stat-lbl">Skills</div></div>
+  <div class="stat-item"><div class="stat-num">9</div><div class="stat-lbl">Tiers</div></div>
+  <div class="stat-item"><div class="stat-num">5</div><div class="stat-lbl">Categories</div></div>
+  <div class="stat-item"><div class="stat-num">AI</div><div class="stat-lbl">Coach</div></div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section class="section" id="how">
+  <div class="section-eyebrow">How it works</div>
+  <div class="section-title">A logical progression system</div>
+  <p class="section-sub">Each skill has prerequisites. You can't jump to a muscle-up without building the foundation. That's the point.</p>
+  <div class="how-grid">
+    <div class="how-card">
+      <div class="how-num">01</div>
+      <div class="how-icon"><svg viewBox="0 0 16 16" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="4" r="1.5"/><circle cx="3" cy="12" r="1.5"/><circle cx="13" cy="12" r="1.5"/><path d="M8 5.5v2l-4 3.5M8 5.5v2l4 3.5"/></svg></div>
+      <div class="how-title">Prerequisite-gated skills</div>
+      <div class="how-desc">Every skill requires mastering its foundation first. The tree enforces the correct order — no shortcuts.</div>
+    </div>
+    <div class="how-card">
+      <div class="how-num">02</div>
+      <div class="how-icon"><svg viewBox="0 0 16 16" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="1" width="14" height="14" rx="2"/><path d="M5 8h6M8 5v6"/></svg></div>
+      <div class="how-title">Honest goal tracking</div>
+      <div class="how-desc">Log reps or hold times per session. Time goals require a single unbroken hold — no adding up partial attempts.</div>
+    </div>
+    <div class="how-card">
+      <div class="how-num">03</div>
+      <div class="how-icon"><svg viewBox="0 0 16 16" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><path d="M6 9.5c0-1.5 4-1.5 4-3a2 2 0 0 0-4 0"/><circle cx="8" cy="12" r=".5" fill="currentColor"/></svg></div>
+      <div class="how-title">AI coaching</div>
+      <div class="how-desc">A Groq-powered coach reads your actual progress and gives specific, actionable guidance — not generic advice.</div>
+    </div>
+    <div class="how-card">
+      <div class="how-num">04</div>
+      <div class="how-icon"><svg viewBox="0 0 16 16" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h12M2 8h8M2 12h10"/></svg></div>
+      <div class="how-title">Tutorial videos</div>
+      <div class="how-desc">Every skill has a curated tutorial. Watch inline or open YouTube. Step-by-step coaching cues for correct form.</div>
+    </div>
+    <div class="how-card">
+      <div class="how-num">05</div>
+      <div class="how-icon"><svg viewBox="0 0 16 16" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="12" height="10" rx="2"/><path d="M2 7h12M6 3v4M10 3v4"/></svg></div>
+      <div class="how-title">Cloud sync</div>
+      <div class="how-desc">Progress syncs to Firebase under your username. Pick up where you left off on any device.</div>
+    </div>
+    <div class="how-card">
+      <div class="how-num">06</div>
+      <div class="how-icon"><svg viewBox="0 0 16 16" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="8,2 10,6 14,6.5 11,9.5 11.5,14 8,12 4.5,14 5,9.5 2,6.5 6,6"/></svg></div>
+      <div class="how-title">Legendary milestones</div>
+      <div class="how-desc">Muscle-up, front lever, pistol squat, planche — marked as legendary. Real benchmarks for serious athletes.</div>
+    </div>
+  </div>
+</section>
+
+<!-- TIER TABLE -->
+<div class="tier-section">
+  <div class="tier-inner">
+    <div class="section-eyebrow">Progression</div>
+    <div class="section-title">Nine tiers, one tree</div>
+    <div class="tier-table">
+      <div class="tier-row" style="background:var(--s2)"><div class="tier-cell num" style="color:var(--tx3);font-size:9px;letter-spacing:.08em">T</div><div class="tier-cell name" style="color:var(--tx2);font-size:10px;font-weight:600;letter-spacing:.06em">LEVEL</div><div class="tier-cell skills-list" style="color:var(--tx2);font-size:10px;font-weight:600;letter-spacing:.06em">EXAMPLE SKILLS</div><div class="tier-cell badge"></div></div>
+      <div class="tier-row"><div class="tier-cell num">1</div><div class="tier-cell name">Foundation</div><div class="tier-cell skills-list">Wall Push-up, Dead Hang, Plank, Air Squat</div><div class="tier-cell badge"><span class="tier-badge">Entry</span></div></div>
+      <div class="tier-row"><div class="tier-cell num">2</div><div class="tier-cell name">Beginner</div><div class="tier-cell skills-list">Incline Push-up, Scapular Pull, Hollow Body, Headstand</div><div class="tier-cell badge"></div></div>
+      <div class="tier-row"><div class="tier-cell num">3</div><div class="tier-cell name">Developing</div><div class="tier-cell skills-list">Push-up, Negative Pull-up, Hanging Knee Raise</div><div class="tier-cell badge"></div></div>
+      <div class="tier-row"><div class="tier-cell num">4</div><div class="tier-cell name">Intermediate</div><div class="tier-cell skills-list">Pull-up, Chin-up, L-Sit Hold, Wall Handstand</div><div class="tier-cell badge"></div></div>
+      <div class="tier-row"><div class="tier-cell num">5</div><div class="tier-cell name">Strong</div><div class="tier-cell skills-list">Pike Push-up, Wide Pull-up, Dragon Flag, Shrimp Squat</div><div class="tier-cell badge"></div></div>
+      <div class="tier-row"><div class="tier-cell num">6</div><div class="tier-cell name">Advanced</div><div class="tier-cell skills-list">Muscle-up, Tuck Front Lever, Pistol Squat, HS Walk</div><div class="tier-cell badge"><span class="tier-badge legendary">★ Legendary</span></div></div>
+      <div class="tier-row"><div class="tier-cell num">7</div><div class="tier-cell name">Expert</div><div class="tier-cell skills-list">One-Arm Push-up, Handstand Push-up, Front Lever, Human Flag</div><div class="tier-cell badge"><span class="tier-badge legendary">★ Legendary</span></div></div>
+      <div class="tier-row"><div class="tier-cell num">8</div><div class="tier-cell name">Elite</div><div class="tier-cell skills-list">Full Planche, One-Arm Pull-up, Freestanding HSPU</div><div class="tier-cell badge"><span class="tier-badge legendary">★ Peak</span></div></div>
+      <div class="tier-row"><div class="tier-cell num" style="color:var(--lg)">9</div><div class="tier-cell name" style="color:var(--lg)">Mythical</div><div class="tier-cell skills-list">Manna, Press to Handstand, One-Arm Handstand</div><div class="tier-cell badge"><span class="tier-badge legendary">★ Peak</span></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- AUTH -->
+<section class="auth-section" id="auth">
+  <div class="auth-card">
+    <div class="auth-card-top">
+      <div class="auth-card-title">Start your tree</div>
+      <p class="auth-card-sub">Create an account to sync progress across devices. No email needed.</p>
+    </div>
+    <div style="padding:16px 24px 0">
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tab-signup" onclick="switchTab('signup')">Sign up</button>
+        <button class="auth-tab" id="tab-login" onclick="switchTab('login')">Log in</button>
+      </div>
+    </div>
+    <div class="auth-body">
+      <div class="auth-fields">
+        <div class="field" id="field-username">
+          <label class="field-label">Username</label>
+          <input class="field-input" type="text" id="inp-user" placeholder="e.g. alex_lifts" maxlength="24" autocomplete="username" oninput="cleanUser(this)">
+          <span class="field-hint">Letters, numbers, underscores only.</span>
+        </div>
+        <div class="field">
+          <label class="field-label">Password</label>
+          <input class="field-input" type="password" id="inp-pass" placeholder="8+ characters" autocomplete="new-password" minlength="8">
+        </div>
+        <div class="auth-error" id="auth-err"></div>
+        <div class="auth-success" id="auth-ok"></div>
+        <button class="auth-submit" id="auth-submit" onclick="handleAuth()">Create account</button>
+        <div class="auth-divider">or</div>
+        <button class="auth-guest" onclick="guestMode()">Continue without account</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <span class="foot-brand">Calitree</span>
+  <span class="foot-copy">Progress is a tree, not a ladder.</span>
+</footer>
+
+<script type="module">
+'use strict';
+const CFG={apiKey:"AIzaSyCAAsutvPudd0EZfIXjBpj-2nQYKs4Yhsg",authDomain:"calitree-4704f.firebaseapp.com",projectId:"calitree-4704f",storageBucket:"calitree-4704f.firebasestorage.app",messagingSenderId:"947718327578",appId:"1:947718327578:web:f277b2d3b9d6834ab6b0a3"};
+const VER='12.14.0';
+const fakeEmail=u=>`${u.toLowerCase().trim()}@calitree.app`;
+let auth=null,db=null,ready=false,_fns={};
+async function init(){
+  try{
+    const[{initializeApp},{getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,updateProfile,onAuthStateChanged},{getFirestore,doc,setDoc,getDoc,serverTimestamp}]=await Promise.all([import(`https://www.gstatic.com/firebasejs/${VER}/firebase-app.js`),import(`https://www.gstatic.com/firebasejs/${VER}/firebase-auth.js`),import(`https://www.gstatic.com/firebasejs/${VER}/firebase-firestore.js`)]);
+    const app=initializeApp(CFG);auth=getAuth(app);db=getFirestore(app);ready=true;
+    _fns={createUserWithEmailAndPassword,signInWithEmailAndPassword,updateProfile,doc,setDoc,getDoc,serverTimestamp};
+    onAuthStateChanged(auth,user=>{if(user){localStorage.setItem('cali_username',user.displayName||user.email.split('@')[0]);redirect();}});
+  }catch(e){console.warn('Firebase:',e.message);}
+}
+init();
+function redirect(){window.location.href='app.html';}
+window.handleAuth=async function(){
+  const username=document.getElementById('inp-user').value.trim();
+  const password=document.getElementById('inp-pass').value;
+  const isSignup=document.getElementById('tab-signup').classList.contains('active');
+  clearMsgs();
+  if(!username)return showErr('Username required');
+  if(!/^[a-zA-Z0-9_]{2,24}$/.test(username))return showErr('2-24 chars, letters/numbers/underscores');
+  if(password.length<8)return showErr('Password must be 8+ characters');
+  const btn=document.getElementById('auth-submit');
+  btn.disabled=true;btn.textContent=isSignup?'Creating…':'Signing in…';
+  if(!ready){localStorage.setItem('cali_username',username);redirect();return;}
+  try{
+    if(isSignup){
+      const cred=await _fns.createUserWithEmailAndPassword(auth,fakeEmail(username),password);
+      await _fns.updateProfile(cred.user,{displayName:username});
+      await _fns.setDoc(_fns.doc(db,'users',cred.user.uid),{username,createdAt:_fns.serverTimestamp(),progress:{completed:['root'],xp:0,logs:{}}});
+      localStorage.setItem('cali_username',username);showOk(`Welcome, ${username}!`);setTimeout(redirect,1100);
+    }else{
+      const cred=await _fns.signInWithEmailAndPassword(auth,fakeEmail(username),password);
+      localStorage.setItem('cali_username',cred.user.displayName||username);showOk('Welcome back!');setTimeout(redirect,900);
+    }
+  }catch(e){btn.disabled=false;btn.textContent=isSignup?'Create account':'Log in';showErr(fbErr(e.code));}
+};
+window.guestMode=function(){localStorage.setItem('cali_username','guest');redirect();};
+window.switchTab=function(tab){
+  const s=tab==='signup';
+  document.getElementById('tab-signup').classList.toggle('active',s);
+  document.getElementById('tab-login').classList.toggle('active',!s);
+  document.getElementById('inp-pass').autocomplete=s?'new-password':'current-password';
+  document.getElementById('auth-submit').textContent=s?'Create account':'Log in';clearMsgs();
+};
+window.cleanUser=function(inp){inp.value=inp.value.replace(/[^a-zA-Z0-9_]/g,'');};
+function showErr(m){const e=document.getElementById('auth-err');e.textContent=m;e.classList.add('show');}
+function showOk(m){const e=document.getElementById('auth-ok');e.textContent=m;e.classList.add('show');}
+function clearMsgs(){document.getElementById('auth-err').classList.remove('show');document.getElementById('auth-ok').classList.remove('show');}
+function fbErr(c){return{'auth/email-already-in-use':'Username taken.','auth/user-not-found':'No account found.','auth/wrong-password':'Incorrect password.','auth/too-many-requests':'Too many attempts.'}[c]||`Error: ${c}`;}
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.closest('.auth-fields'))handleAuth();});
+</script>
+</body>
+</html>
