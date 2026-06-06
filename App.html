@@ -1,0 +1,1597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<title>Calitree</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ─── DESIGN TOKENS ────────────────────────── */
+:root {
+  /* Surfaces */
+  --s0: #0e0e0e;
+  --s1: #121212;
+  --s2: #181818;
+  --s3: #1e1e1e;
+  --s4: #252525;
+  --s5: #2d2d2d;
+
+  /* Borders */
+  --b1: rgba(255,255,255,.09);
+  --b2: rgba(255,255,255,.14);
+  --b3: rgba(255,255,255,.22);
+
+  /* Text */
+  --tx0: #f5f5f5;
+  --tx1: #b8b8b8;
+  --tx2: #707070;
+  --tx3: #464646;
+
+  /* Accent — single green */
+  --a: #2ecc71;
+  --a-dim: rgba(46,204,113,.12);
+  --a-border: rgba(46,204,113,.28);
+
+  /* Amber — legendary only */
+  --lg: #f0a830;
+  --lg-dim: rgba(232,160,32,.08);
+  --lg-border: rgba(232,160,32,.2);
+
+  /* Type */
+  --f: 'Geist', -apple-system, sans-serif;
+  --fm: 'Geist Mono', 'JetBrains Mono', monospace;
+
+  /* Glow */
+  --glow-a: 0 0 12px rgba(46,204,113,.15), 0 0 24px rgba(46,204,113,.06);
+  --glow-lg: 0 0 12px rgba(240,168,48,.15), 0 0 24px rgba(240,168,48,.06);
+
+  /* Radius */
+  --r1: 4px;
+  --r2: 6px;
+  --r3: 8px;
+  --r4: 12px;
+
+  /* Layout */
+  --hdr-h: 48px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; background: var(--s0); color: var(--tx0); font-family: var(--f); overflow: hidden; -webkit-font-smoothing: antialiased; font-size: 13px; line-height: 1.5; }
+
+/* ─── HEADER ────────────────────────────────── */
+#hdr {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 300;
+  height: var(--hdr-h);
+  background: rgba(8,8,8,.92);
+  border-bottom: 1px solid var(--b1);
+  backdrop-filter: blur(12px);
+  display: flex; align-items: center; padding: 0 16px; gap: 0;
+}
+.h-brand {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; font-weight: 600; color: var(--tx0);
+  letter-spacing: -.01em; margin-right: 20px;
+}
+.h-brand-icon {
+  width: 22px; height: 22px;
+  background: var(--s4); border: 1px solid var(--b2);
+  border-radius: var(--r1);
+  display: flex; align-items: center; justify-content: center;
+}
+.h-divider { width: 1px; height: 16px; background: var(--b1); margin: 0 14px; flex-shrink: 0; }
+.h-stat-group { display: flex; align-items: center; gap: 12px; }
+.h-stat { display: flex; align-items: center; gap: 5px; }
+.h-stat-val { font-family: var(--fm); font-size: 12px; color: var(--tx0); font-weight: 500; }
+.h-stat-lbl { font-size: 11px; color: var(--tx2); }
+.h-level {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--s3); border: 1px solid var(--b1);
+  border-radius: var(--r2); padding: 4px 10px;
+}
+.h-level-label { font-family: var(--fm); font-size: 10px; color: var(--tx2); letter-spacing: .06em; }
+.h-level-val { font-family: var(--fm); font-size: 11px; color: var(--tx0); font-weight: 500; }
+.h-xp-track { width: 48px; height: 2px; background: var(--s5); border-radius: 1px; overflow: hidden; }
+.h-xp-fill { height: 100%; background: var(--a); border-radius: 1px; transition: width .4s ease; box-shadow: 0 0 6px rgba(46,204,113,.4); }
+.h-actions { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+.h-username { font-family: var(--fm); font-size: 10px; color: var(--tx2); letter-spacing: .04em; }
+.h-btn {
+  padding: 5px 10px; border-radius: var(--r2);
+  border: 1px solid var(--b1); background: transparent;
+  color: var(--tx1); font-family: var(--f); font-size: 11px;
+  font-weight: 500; cursor: pointer; transition: all .15s;
+  display: flex; align-items: center; gap: 5px; white-space: nowrap;
+}
+.h-btn:hover { border-color: var(--b2); color: var(--tx0); background: var(--s3); }
+.h-btn.active { border-color: var(--b2); background: var(--s4); color: var(--tx0); }
+.h-btn svg { width: 12px; height: 12px; stroke: currentColor; flex-shrink: 0; }
+
+/* ─── CANVAS VIEWPORT ───────────────────────── */
+#canvas-wrap {
+  position: fixed;
+  top: var(--hdr-h); left: 0; right: 0; bottom: 0;
+  overflow: hidden;
+  cursor: grab;
+  background: var(--s0);
+  touch-action: none;
+  user-select: none;
+}
+
+#canvas-wrap.panning { cursor: grabbing; }
+#canvas-wrap.coach-open { right: 360px; }
+
+/* The actual canvas element must have explicit dimensions for mobile to render */
+#canvas {
+  position: absolute;
+  top: 0; left: 0;
+  width: 2700px; height: 2000px; /* generous fixed size — JS sets this */
+  transform-origin: top left;
+  will-change: transform;
+}
+#tree-svg {
+  position: absolute; top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none; overflow: visible;
+}
+#tree-nodes { position: absolute; top: 0; left: 0; }
+
+/* ─── NODES ─────────────────────────────────── */
+.node {
+  position: absolute;
+  width: 116px; height: 60px;
+  border-radius: var(--r2);
+  border: 1px solid var(--b2);
+  background: var(--s2);
+  padding: 9px 11px 8px;
+  display: flex; flex-direction: column;
+  cursor: pointer;
+  transition: border-color .15s, background .15s, transform .1s;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.node:active { transform: scale(0.97); }
+.node.locked { opacity: .5; cursor: pointer; }
+.node.locked:hover { border-color: var(--b2); opacity: .65; }
+.node.available { background: var(--s3); border-color: var(--b2); }
+.node.available:hover { border-color: var(--b3); background: var(--s4); transform: translateY(-1px); box-shadow: 0 0 10px rgba(255,255,255,.04); }
+.node.completed { background: var(--a-dim); border-color: var(--a-border); box-shadow: var(--glow-a); }
+.node.completed:hover { border-color: rgba(34,197,94,.35); transform: translateY(-1px); }
+.node.legendary.available { background: var(--lg-dim); border-color: var(--lg-border); }
+.node.legendary.available:hover { border-color: rgba(232,160,32,.35); }
+.node.legendary.completed { background: rgba(240,168,48,.07); border-color: var(--lg-border); box-shadow: var(--glow-lg); }
+.node.legendary.completed:hover { border-color: rgba(232,160,32,.35); }
+
+.node-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+.node-cat { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+.node-badge {
+  font-family: var(--fm); font-size: 8px; font-weight: 500;
+  letter-spacing: .04em; color: var(--tx3);
+}
+.node.available .node-badge { color: var(--tx2); }
+.node.completed .node-badge { color: rgba(34,197,94,.5); }
+.node.legendary.available .node-badge,
+.node.legendary.completed .node-badge { color: rgba(232,160,32,.5); }
+
+.node-name {
+  font-size: 11px; font-weight: 500; line-height: 1.25;
+  color: var(--tx3);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  flex: 1;
+}
+.node.available .node-name { color: var(--tx0); }
+.node.completed .node-name { color: var(--a); }
+.node.legendary.available .node-name,
+.node.legendary.completed .node-name { color: var(--lg); }
+
+.node-progress { height: 1px; background: var(--b1); margin-top: auto; border-radius: 1px; overflow: hidden; }
+.node-progress-fill { height: 100%; border-radius: 1px; transition: width .3s ease; background: var(--b2); }
+.node.completed .node-progress-fill { background: rgba(34,197,94,.3); }
+.node.legendary.completed .node-progress-fill { background: rgba(232,160,32,.3); }
+
+/* Root node */
+.node.root {
+  width: 100px; height: 30px; border-radius: 15px;
+  background: var(--s4); border-color: var(--b2);
+  align-items: center; justify-content: center;
+  flex-direction: row; padding: 0;
+}
+.node.root .node-name {
+  font-size: 10px; font-weight: 600; color: var(--tx2);
+  letter-spacing: .08em; text-transform: uppercase;
+  text-align: center; flex: none;
+}
+
+/* Category dot colors */
+.cat-push { background: #6e8cfb; }
+.cat-pull { background: var(--a); }
+.cat-core { background: #f97316; }
+.cat-legs { background: #a78bfa; }
+.cat-balance { background: #38bdf8; }
+
+/* Category label */
+.cat-label {
+  position: absolute;
+  font-family: var(--fm); font-size: 9px; font-weight: 500;
+  letter-spacing: .14em; text-transform: uppercase;
+  color: var(--tx3); pointer-events: none; white-space: nowrap;
+}
+
+/* ─── BRANCH LINES ──────────────────────────── */
+.branch { stroke: var(--b1); stroke-width: 1; fill: none; }
+.branch.unlocked { stroke: rgba(46,204,113,.25); }
+.branch.available { stroke: rgba(255,255,255,.07); }
+.branch.legendary-line { stroke: rgba(232,160,32,.15); }
+
+/* ─── ZOOM CONTROLS ─────────────────────────── */
+#zoom-ctrl {
+  position: fixed; bottom: 20px; right: 20px; z-index: 200;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.z-btn {
+  width: 32px; height: 32px; border-radius: var(--r2);
+  background: var(--s3); border: 1px solid var(--b1);
+  color: var(--tx2); font-size: 14px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .15s; font-family: var(--f);
+}
+.z-btn:hover { border-color: var(--b2); color: var(--tx0); background: var(--s4); }
+
+/* ─── MODAL ─────────────────────────────────── */
+#modal-bg {
+  display: none; position: fixed; inset: 0; z-index: 400;
+  background: rgba(0,0,0,.7);
+  backdrop-filter: blur(4px);
+  align-items: center; justify-content: center; padding: 16px;
+}
+#modal-bg.open { display: flex; animation: bgFadeIn .15s ease; }
+@keyframes bgFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+#modal {
+  background: var(--s2);
+  border: 1px solid var(--b2);
+  border-radius: var(--r4);
+  width: 100%; max-width: 440px;
+  max-height: 88vh; overflow-y: auto;
+  animation: modalSlide .15s ease;
+  scrollbar-width: thin; scrollbar-color: var(--b1) transparent;
+}
+@keyframes modalSlide { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: none; } }
+
+.m-header {
+  padding: 16px 16px 14px;
+  border-bottom: 1px solid var(--b1);
+  display: flex; align-items: flex-start; gap: 12px;
+  position: sticky; top: 0; background: var(--s2); z-index: 1;
+}
+.m-icon {
+  width: 36px; height: 36px; border-radius: var(--r2);
+  background: var(--s4); border: 1px solid var(--b1);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; flex-shrink: 0;
+}
+.m-icon svg { width: 16px; height: 16px; stroke: var(--tx1); }
+.m-title-group { flex: 1; min-width: 0; }
+.m-title { font-size: 14px; font-weight: 600; color: var(--tx0); line-height: 1.2; margin-bottom: 3px; letter-spacing: -.01em; }
+.m-subtitle { font-size: 10px; color: var(--tx2); font-family: var(--fm); letter-spacing: .07em; text-transform: uppercase; }
+.m-close {
+  width: 24px; height: 24px; border-radius: var(--r1);
+  background: transparent; border: 1px solid var(--b1);
+  color: var(--tx2); cursor: pointer; font-size: 11px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: all .12s;
+}
+.m-close:hover { border-color: var(--b2); color: var(--tx0); background: var(--s3); }
+
+.m-body { padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+
+.m-locked {
+  background: var(--s3); border: 1px solid var(--b1);
+  border-radius: var(--r2); padding: 10px 12px;
+  font-size: 11px; color: var(--tx2); display: flex; gap: 8px; align-items: flex-start;
+}
+.m-locked svg { width: 12px; height: 12px; stroke: var(--tx2); flex-shrink: 0; margin-top: 1px; }
+
+.m-section { display: flex; flex-direction: column; gap: 8px; }
+.m-label { font-size: 9px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--tx2); font-family: var(--fm); }
+.m-desc { font-size: 12px; line-height: 1.65; color: var(--tx1); }
+
+/* Video */
+.m-video-wrap {
+  border-radius: var(--r2); overflow: hidden;
+  aspect-ratio: 16/9; background: var(--s3);
+  border: 1px solid var(--b1); position: relative;
+}
+.m-video-wrap iframe { width: 100%; height: 100%; display: block; border: none; }
+.m-video-btn {
+  width: 100%; height: 100%;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  cursor: pointer; transition: background .15s; background: transparent;
+  border: none;
+}
+.m-video-btn:hover { background: rgba(255,255,255,.02); }
+.m-play-ring {
+  width: 38px; height: 38px; border-radius: 50%;
+  border: 1px solid var(--b2);
+  display: flex; align-items: center; justify-content: center;
+}
+.m-play-ring svg { width: 14px; height: 14px; stroke: var(--tx1); }
+.m-video-label { font-size: 10px; color: var(--tx2); font-family: var(--fm); }
+.m-yt-link {
+  display: block; font-size: 10px; color: var(--tx2); font-family: var(--fm);
+  text-decoration: none; padding: 2px 0;
+  transition: color .12s;
+}
+.m-yt-link:hover { color: var(--tx1); }
+
+/* Steps */
+.step-list { display: flex; flex-direction: column; gap: 7px; }
+.step-row { display: flex; gap: 10px; align-items: flex-start; }
+.step-num {
+  flex-shrink: 0; width: 16px; height: 16px; border-radius: 50%;
+  background: var(--s4); border: 1px solid var(--b1);
+  font-size: 8px; font-family: var(--fm); color: var(--tx2);
+  display: flex; align-items: center; justify-content: center;
+  margin-top: 2px;
+}
+.step-text { font-size: 12px; line-height: 1.55; color: var(--tx1); }
+
+/* Requirements */
+.req-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.req-chip {
+  padding: 3px 8px; border-radius: var(--r1);
+  font-size: 10px; font-family: var(--fm);
+  display: flex; align-items: center; gap: 4px;
+  border: 1px solid var(--b1); color: var(--tx2); background: var(--s3);
+}
+.req-chip.met { border-color: var(--a-border); color: var(--a); background: var(--a-dim); }
+
+/* Goal card */
+.goal-card {
+  background: var(--s3); border: 1px solid var(--b1);
+  border-radius: var(--r2); padding: 12px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.goal-row { display: flex; justify-content: space-between; align-items: baseline; }
+.goal-name { font-size: 12px; font-weight: 500; color: var(--tx0); }
+.goal-pct { font-family: var(--fm); font-size: 10px; color: var(--tx2); }
+.goal-track { height: 2px; background: var(--b1); border-radius: 1px; overflow: hidden; }
+.goal-fill { height: 100%; border-radius: 1px; background: var(--tx3); transition: width .3s ease; }
+.goal-hint { font-size: 10px; color: var(--tx2); font-family: var(--fm); line-height: 1.5; }
+
+/* Log */
+.log-row { display: flex; gap: 6px; align-items: center; }
+.log-input {
+  flex: 1; min-width: 0; background: var(--s4);
+  border: 1px solid var(--b1); border-radius: var(--r1);
+  padding: 7px 9px; color: var(--tx0);
+  font-family: var(--fm); font-size: 12px; outline: none;
+  transition: border-color .12s;
+}
+.log-input:focus { border-color: var(--b3); }
+.log-unit { font-size: 10px; color: var(--tx2); font-family: var(--fm); white-space: nowrap; flex-shrink: 0; }
+.log-btn {
+  padding: 7px 12px; border-radius: var(--r1);
+  border: 1px solid var(--b1); background: var(--s4);
+  color: var(--tx0); font-family: var(--f); font-size: 11px;
+  font-weight: 500; cursor: pointer; white-space: nowrap;
+  transition: all .12s;
+}
+.log-btn:hover { border-color: var(--b2); background: var(--s5); }
+
+.log-history { display: flex; flex-direction: column; gap: 3px; max-height: 86px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--b1) transparent; }
+.log-entry { display: flex; justify-content: space-between; padding: 4px 7px; border-radius: var(--r1); background: var(--s4); font-family: var(--fm); font-size: 10px; }
+.log-val { color: var(--tx1); }
+.log-val.good { color: var(--a); }
+.log-date { color: var(--tx3); }
+.log-empty { font-size: 10px; color: var(--tx3); font-family: var(--fm); }
+
+/* Completed banner */
+.done-banner {
+  background: var(--a-dim); border: 1px solid var(--a-border);
+  border-radius: var(--r2); padding: 10px 12px;
+  display: flex; align-items: center; gap: 10px;
+}
+.done-banner.legendary { background: var(--lg-dim); border-color: var(--lg-border); }
+.done-banner svg { width: 16px; height: 16px; stroke: var(--a); flex-shrink: 0; }
+.done-banner.legendary svg { stroke: var(--lg); }
+.done-text { flex: 1; }
+.done-title { font-size: 12px; font-weight: 600; color: var(--a); }
+.done-banner.legendary .done-title { color: var(--lg); }
+.done-sub { font-size: 10px; color: var(--tx2); margin-top: 1px; font-family: var(--fm); }
+
+/* Action buttons */
+.action-btn {
+  width: 100%; padding: 10px;
+  border-radius: var(--r2); border: 1px solid var(--b1);
+  background: var(--s3); color: var(--tx2);
+  font-family: var(--f); font-size: 12px; font-weight: 500;
+  cursor: not-allowed; transition: all .12s; text-align: center;
+}
+.action-btn.ready {
+  border-color: var(--b2); background: var(--s4);
+  color: var(--tx0); cursor: pointer;
+}
+.action-btn.ready:hover { border-color: var(--b3); background: var(--s5); }
+.action-btn.ghost {
+  background: transparent; border-color: var(--b1);
+  color: var(--tx2); cursor: pointer;
+}
+.action-btn.ghost:hover { color: var(--tx1); border-color: var(--b2); }
+
+/* ─── COACH PANEL ────────────────────────────── */
+#coach-panel {
+  position: fixed; top: var(--hdr-h); right: 0; bottom: 0;
+  width: 360px;
+  background: var(--s1);
+  border-left: 1px solid var(--b1);
+  display: flex; flex-direction: column;
+  z-index: 250;
+  transform: translateX(100%);
+  transition: transform .2s ease;
+}
+#coach-panel.open { transform: translateX(0); }
+
+.cp-top {
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid var(--b1);
+  display: flex; align-items: center; justify-content: space-between;
+  flex-shrink: 0;
+}
+.cp-title { font-size: 12px; font-weight: 600; color: var(--tx0); letter-spacing: -.01em; }
+.cp-key-status {
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--fm); font-size: 10px; color: var(--tx2);
+}
+.cp-key-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--tx3); }
+.cp-key-dot.active { background: var(--a); }
+.cp-key-btn {
+  padding: 3px 8px; border-radius: var(--r1);
+  border: 1px solid var(--b1); background: transparent;
+  color: var(--tx2); font-size: 10px; font-family: var(--fm);
+  cursor: pointer; transition: all .12s;
+}
+.cp-key-btn:hover { border-color: var(--b2); color: var(--tx1); }
+
+.cp-messages {
+  flex: 1; overflow-y: auto; padding: 14px;
+  display: flex; flex-direction: column; gap: 10px;
+  scrollbar-width: thin; scrollbar-color: var(--b1) transparent;
+}
+.cp-msg { max-width: 90%; display: flex; flex-direction: column; gap: 3px; }
+.cp-msg.user { align-self: flex-end; }
+.cp-msg.ai { align-self: flex-start; }
+.cp-bubble {
+  padding: 9px 11px; border-radius: var(--r2);
+  font-size: 12px; line-height: 1.6;
+}
+.cp-msg.user .cp-bubble {
+  background: var(--s4); border: 1px solid var(--b1); color: var(--tx0);
+}
+.cp-msg.ai .cp-bubble {
+  background: var(--s2); border: 1px solid var(--b1); color: var(--tx1);
+}
+.cp-bubble.loading { color: var(--tx2); }
+.cp-time { font-size: 9px; color: var(--tx3); font-family: var(--fm); padding: 0 2px; }
+
+.cp-bottom {
+  padding: 12px;
+  border-top: 1px solid var(--b1);
+  display: flex; flex-direction: column; gap: 8px;
+  flex-shrink: 0;
+}
+.cp-quick { display: flex; flex-wrap: wrap; gap: 5px; }
+.cp-quick-btn {
+  padding: 4px 9px; border-radius: var(--r1);
+  border: 1px solid var(--b1); background: transparent;
+  color: var(--tx2); font-size: 10px; cursor: pointer;
+  transition: all .12s; font-family: var(--f);
+}
+.cp-quick-btn:hover { border-color: var(--b2); color: var(--tx1); background: var(--s3); }
+.cp-input-row { display: flex; gap: 6px; }
+.cp-textarea {
+  flex: 1; background: var(--s3); border: 1px solid var(--b1);
+  border-radius: var(--r2); padding: 8px 10px;
+  color: var(--tx0); font-family: var(--f); font-size: 12px;
+  outline: none; resize: none; height: 36px;
+  transition: border-color .12s;
+}
+.cp-textarea:focus { border-color: var(--b2); }
+.cp-send {
+  padding: 8px 12px; border-radius: var(--r2);
+  border: 1px solid var(--b1); background: var(--s3);
+  color: var(--tx1); font-size: 11px; cursor: pointer;
+  transition: all .12s; font-family: var(--f);
+}
+.cp-send:hover { border-color: var(--b2); color: var(--tx0); }
+.cp-send:disabled { opacity: .4; cursor: not-allowed; }
+
+/* ─── TOAST ─────────────────────────────────── */
+#toast {
+  position: fixed; bottom: 20px; left: 50%;
+  transform: translateX(-50%) translateY(50px);
+  opacity: 0; pointer-events: none; z-index: 600;
+  background: var(--s4); border: 1px solid var(--b2);
+  border-radius: var(--r2); padding: 8px 14px;
+  font-size: 11px; color: var(--tx1); font-family: var(--fm);
+  white-space: nowrap; transition: all .2s ease;
+}
+#toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+/* ─── MOBILE ─────────────────────────────────── */
+@media (max-width: 700px) {
+  :root { --hdr-h: 44px; }
+  #hdr { padding: 0 12px; gap: 0; }
+  .h-brand { margin-right: 12px; }
+  .h-divider:first-of-type { display: none; }
+  .h-stat-group { gap: 8px; }
+  .h-stat-lbl { display: none; }
+  .h-level-label { display: none; }
+  .h-xp-track { width: 32px; }
+
+  #canvas-wrap { touch-action: none; }
+
+  #coach-panel {
+    width: 100%; height: 65vh;
+    top: auto; bottom: 0;
+    border-left: none;
+    border-top: 1px solid var(--b1);
+    border-radius: var(--r4) var(--r4) 0 0;
+    transform: translateY(100%);
+  }
+  #coach-panel.open { transform: translateY(0); }
+  #canvas-wrap.coach-open { right: 0; }
+
+  #modal { max-width: 100%; border-radius: var(--r4) var(--r4) 0 0; max-height: 90vh; }
+  #modal-bg { align-items: flex-end; padding: 0; }
+
+  #zoom-ctrl { bottom: 14px; right: 12px; }
+  .z-btn { width: 28px; height: 28px; font-size: 13px; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header id="hdr">
+  <div class="h-brand">
+    <div class="h-brand-icon">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+        <circle cx="6" cy="2" r="1"/>
+        <circle cx="2" cy="8" r="1"/>
+        <circle cx="10" cy="8" r="1"/>
+        <line x1="6" y1="3" x2="3.2" y2="7"/>
+        <line x1="6" y1="3" x2="8.8" y2="7"/>
+      </svg>
+    </div>
+    Calitree
+  </div>
+  <div class="h-divider"></div>
+  <div class="h-stat-group">
+    <div class="h-stat">
+      <span class="h-stat-val" id="h-done">0</span>
+      <span class="h-stat-lbl">/ <span id="h-total">0</span> skills</span>
+    </div>
+    <div class="h-divider"></div>
+    <div class="h-stat">
+      <span class="h-stat-val" id="h-xp">0</span>
+      <span class="h-stat-lbl">xp</span>
+    </div>
+  </div>
+  <div class="h-actions">
+    <div class="h-level">
+      <span class="h-level-label">LEVEL</span>
+      <span class="h-level-val" id="h-lvl">1</span>
+      <div class="h-xp-track"><div class="h-xp-fill" id="h-xp-fill" style="width:0%"></div></div>
+    </div>
+    <span class="h-username" id="h-username"></span>
+    <button class="h-btn" id="coach-toggle" onclick="toggleCoach()">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="8" cy="8" r="6"/>
+        <path d="M6 9.5c0-1.5 4-1.5 4-3a2 2 0 0 0-4 0"/>
+        <circle cx="8" cy="12" r=".5" fill="currentColor"/>
+      </svg>
+      Coach
+    </button>
+    <button class="h-btn" id="h-logout" onclick="handleLogout()" title="Log out">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10 8H3m0 0 2.5-2.5M3 8l2.5 2.5"/>
+        <path d="M6 4.5V3a1 1 0 0 1 1-1h5a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1v-1.5"/>
+      </svg>
+    </button>
+  </div>
+</header>
+
+<!-- CANVAS -->
+<div id="canvas-wrap">
+  <div id="canvas">
+    <svg id="tree-svg"></svg>
+    <div id="tree-nodes"></div>
+  </div>
+</div>
+
+<!-- ZOOM -->
+<div id="zoom-ctrl">
+  <button class="z-btn" id="z-in" title="Zoom in">+</button>
+  <button class="z-btn" id="z-out" title="Zoom out">−</button>
+  <button class="z-btn" id="z-rst" title="Fit to screen">
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+      <path d="M1 4V1h3M8 1h3v3M11 8v3H8M4 11H1V8"/>
+    </svg>
+  </button>
+</div>
+
+<!-- MODAL -->
+<div id="modal-bg">
+  <div id="modal">
+    <div class="m-header">
+      <div class="m-icon" id="m-icon">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="8" cy="8" r="6"/>
+        </svg>
+      </div>
+      <div class="m-title-group">
+        <div class="m-title" id="m-title">Skill</div>
+        <div class="m-subtitle" id="m-subtitle">Category · Tier</div>
+      </div>
+      <button class="m-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="m-body" id="m-body"></div>
+  </div>
+</div>
+
+<!-- COACH -->
+<div id="coach-panel">
+  <div class="cp-top">
+    <span class="cp-title">AI Coach</span>
+    <div class="cp-key-status">
+      <div class="cp-key-dot" id="cp-dot"></div>
+      <span id="cp-key-lbl">No key</span>
+      <button class="cp-key-btn" onclick="promptApiKey()">Set key</button>
+      <button class="cp-key-btn" onclick="clearChat()" title="Clear chat history" style="margin-left:2px">Clear</button>
+    </div>
+  </div>
+  <div class="cp-messages" id="cp-messages">
+    <div class="cp-msg ai">
+      <div class="cp-bubble">Set your Groq API key above (free at console.groq.com), then ask me anything about your training — progress, what to work on next, form tips, or a weekly plan.</div>
+      <span class="cp-time">now</span>
+    </div>
+  </div>
+  <div class="cp-bottom">
+    <div class="cp-quick">
+      <button class="cp-quick-btn" onclick="quickMsg('What should I work on next?')">What next?</button>
+      <button class="cp-quick-btn" onclick="quickMsg('Review my current progress')">My progress</button>
+      <button class="cp-quick-btn" onclick="quickMsg('Write me a weekly training plan')">Weekly plan</button>
+      <button class="cp-quick-btn" onclick="quickMsg('Where are my weakest areas?')">Weak spots</button>
+    </div>
+    <div class="cp-input-row">
+      <textarea class="cp-textarea" id="cp-inp" placeholder="Ask your coach…" rows="1" onkeydown="cpKey(event)"></textarea>
+      <button class="cp-send" id="cp-send" onclick="sendCoach()">Send</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+'use strict';
+const NW=116,NH=60,ROOT_W=100,ROOT_H=30;
+const TY={0:1820,1:1590,2:1360,3:1130,4:900,5:670,6:440,7:210,8:20};
+const CW=2700,CH=1920;
+const CAT_DOT={push:'#6e8cfb',pull:'#22c55e',core:'#f97316',legs:'#a78bfa',balance:'#38bdf8'};
+const CAT_NAME={push:'Push',pull:'Pull',core:'Core',legs:'Legs',balance:'Balance'};
+const SKILLS=[
+  {id:'root',name:'Calitree',icon:'○',cat:'root',tier:0,x:1280,
+   requires:[],youtubeId:'',desc:'Your journey starts here.',steps:[],goal:{type:'unlock',label:''},xp:0},
+
+  // ── PUSH (x 20–400) ──
+  {id:'wall-push',name:'Wall Push-up',icon:'↑',cat:'push',tier:1,x:215,
+   requires:['root'],youtubeId:'XnSVpIJIins',
+   desc:'Stand arm\'s length from a wall, lower chest to it, push back. The safest upper-body pressing entry point.',
+   steps:['Stand arm\'s length from wall','Hands at chest height, shoulder-width','Lower chest to wall — body straight','Push back, elbows at ~45°','Core braced throughout'],
+   goal:{type:'sets',sets:3,reps:15,label:'3 × 15 reps'},xp:15},
+
+  {id:'incline-push',name:'Incline Push-up',icon:'↑',cat:'push',tier:2,x:20,
+   requires:['wall-push'],youtubeId:'cfns5aGMNk4',
+   desc:'Hands on a bench or step. More resistance than wall, less than floor.',
+   steps:['Stable elevated surface','Hands shoulder-width, body straight','Lower chest, elbows 45°','Full lockout at top','2s down, 1s up'],
+   goal:{type:'sets',sets:3,reps:15,label:'3 × 15 reps'},xp:25},
+
+  {id:'knee-push',name:'Knee Push-up',icon:'↑',cat:'push',tier:2,x:410,
+   requires:['wall-push'],youtubeId:'jWxvty2KROs',
+   desc:'Knees on floor reduces load ~40%. Classic stepping stone to full push-ups.',
+   steps:['Kneel, hands slightly wider than shoulders','Straight line knees to head','Chest to ~2 cm from floor','Full lockout at top','Hips level — no sagging'],
+   goal:{type:'sets',sets:3,reps:12,label:'3 × 12 reps'},xp:25},
+
+  {id:'pushup',name:'Push-up',icon:'↑',cat:'push',tier:3,x:215,
+   requires:['incline-push','knee-push'],youtubeId:'IODxDxX7oi4',
+   desc:'The foundation. Chest to floor, full ROM, strict form. Master before adding variations.',
+   steps:['Full plank, hands just outside shoulders','Squeeze glutes, abs, quads throughout','Chest touches floor','Elbows 30–45° from torso','Full lockout at top'],
+   goal:{type:'sets',sets:3,reps:15,label:'3 × 15 reps'},xp:50},
+
+  {id:'diamond-push',name:'Diamond Push-up',icon:'↑',cat:'push',tier:4,x:20,
+   requires:['pushup'],youtubeId:'J0DXGHMhHHE',
+   desc:'Hands form diamond under chest. Heavy tricep and inner chest loading.',
+   steps:['Diamond under chest, not face','Elbows track ribcage','Chest nearly touches hands','Squeeze triceps at lockout','No flaring'],
+   goal:{type:'sets',sets:3,reps:10,label:'3 × 10 reps'},xp:45},
+
+  {id:'wide-push',name:'Wide Push-up',icon:'↑',cat:'push',tier:4,x:215,
+   requires:['pushup'],youtubeId:'AiBlQJHBBgY',
+   desc:'Wider hands emphasise outer pec fibres. Greater chest stretch.',
+   steps:['1.5–2× shoulder-width','Feel chest stretch at bottom','Elbows flare slightly — correct','Squeeze chest at top','Maintain plank'],
+   goal:{type:'sets',sets:3,reps:12,label:'3 × 12 reps'},xp:40},
+
+  {id:'decline-push',name:'Decline Push-up',icon:'↑',cat:'push',tier:4,x:410,
+   requires:['pushup'],youtubeId:'SKPab2YC8BE',
+   desc:'Feet elevated shifts load to upper chest and front delts — precursor to HSPU.',
+   steps:['Feet on bench','Hands shoulder-width on floor','Body a plank — no hip sag','Lower chest to floor','Progressively raise feet over time'],
+   goal:{type:'sets',sets:3,reps:12,label:'3 × 12 reps'},xp:45},
+
+  {id:'clap-push',name:'Clap Push-up',icon:'↑',cat:'push',tier:5,x:20,
+   requires:['pushup'],youtubeId:'b5cFSuB4LcE',
+   desc:'Explosive push-up with a clap at the top. Builds upper-body power.',
+   steps:['Full push-up position','Lower with control','Explode up — hands leave floor','Clap in mid-air','Land softly and immediately lower'],
+   goal:{type:'sets',sets:3,reps:8,label:'3 × 8 reps'},xp:55},
+
+  {id:'pike-push',name:'Pike Push-up',icon:'↑',cat:'push',tier:5,x:150,
+   requires:['diamond-push','decline-push'],youtubeId:'765yv6o2b8A',
+   desc:'Hips high in inverted V. Trains the overhead pressing pattern for HSPU.',
+   steps:['Downward-dog position','Hands shoulder-width, fingers forward','Lower crown toward floor','Head between hands at bottom','Push to full shoulder lockout'],
+   goal:{type:'sets',sets:3,reps:10,label:'3 × 10 reps'},xp:60},
+
+  {id:'archer-push',name:'Archer Push-up',icon:'↑',cat:'push',tier:5,x:280,
+   requires:['wide-push','diamond-push'],youtubeId:'DbjHnVoFkIE',
+   desc:'Shift weight to one arm as you descend, other arm stays extended. Unilateral loading.',
+   steps:['Wide stance','Descend shifting ALL weight to one side','Other arm extended for balance','Alternate sides each rep','Hips stay square'],
+   goal:{type:'sets',sets:3,reps:8,label:'3 × 8 each side'},xp:70},
+
+  {id:'pseudo-planche-push',name:'Pseudo Planche Push-up',icon:'↑',cat:'push',tier:5,x:410,
+   requires:['pushup'],youtubeId:'x9KuMVd9cuc',
+   desc:'Hands pointed back, body leaned forward over hands. Builds the wrist strength and shoulder loading needed for planche.',
+   steps:['Hands at hips level, fingers pointing back or to sides','Lean entire body forward — weight over wrists','Body straight — no hip bend','Lower and press with forward lean maintained','Gradually increase forward lean over weeks'],
+   goal:{type:'sets',sets:3,reps:8,label:'3 × 8 reps'},xp:65},
+
+  {id:'typewriter-push',name:'Typewriter Push-up',icon:'↑',cat:'push',tier:6,x:20,
+   requires:['archer-push'],youtubeId:'DbjHnVoFkIE',
+   desc:'Lower to one side, traverse to the other at the bottom, then push up. Extreme unilateral demand.',
+   steps:['Wide push-up stance','Lower to right side','Traverse across to left at bottom','Push up from left','Alternate direction each rep'],
+   goal:{type:'sets',sets:3,reps:6,label:'3 × 6 traversals'},xp:80},
+
+  {id:'hspu-neg',name:'HSPU Negative',icon:'↑',cat:'push',tier:6,x:215,
+   requires:['pike-push'],youtubeId:'b4sLFRHVCCE',
+   desc:'Kick into wall handstand, lower your head to the floor as slowly as possible. Builds eccentric HSPU strength.',
+   steps:['Wall handstand, chest to wall','Hollow body — ribs in','Lower head over 5–8 seconds','Touch floor with crown','Push back up OR step down and repeat'],
+   goal:{type:'sets',sets:5,reps:3,label:'5 × 3 slow negatives'},xp:70},
+
+  {id:'tuck-planche',name:'Tuck Planche',icon:'↑',cat:'push',tier:6,x:410,
+   requires:['pseudo-planche-push','archer-push'],youtubeId:'A3G5t4bM3XE',
+   desc:'Both feet off floor, knees tucked to chest, arms straight. The first true planche hold.',
+   steps:['Parallettes or floor (floor is harder)','Lean forward, weight over wrists','Tuck knees tight to chest','Arms completely straight','Build from 3s → 10s holds'],
+   goal:{type:'time',value:5,label:'5 sec unbroken tuck hold'},xp:120},
+
+  {id:'straddle-planche',name:'Straddle Planche',icon:'↑',cat:'push',tier:7,x:410,
+   requires:['tuck-planche'],youtubeId:'oqpK-lRMRSA',
+   desc:'Legs spread wide in a planche position. Lighter than full planche due to shorter lever.',
+   steps:['From tuck, slowly extend legs out to straddle','Legs wide but not forced','Hips stay at shoulder height','Arms stay locked','Progress from straddle to advanced straddle'],
+   goal:{type:'time',value:3,label:'3 sec unbroken straddle hold'},xp:180,legendary:true},
+
+  {id:'one-arm-push',name:'One-Arm Push-up',icon:'↑',cat:'push',tier:7,x:20,
+   requires:['archer-push','typewriter-push'],youtubeId:'XtN67YNp2HQ',
+   desc:'Full bodyweight on one arm. Wide feet for balance. Slight torso rotation is normal.',
+   steps:['Feet wide — wider is easier','Hand centred under chest','Free hand on lower back','Allow slight rotation','Start with slow negatives'],
+   goal:{type:'sets',sets:3,reps:5,label:'3 × 5 each arm'},xp:150,legendary:true},
+
+  {id:'hspu',name:'Handstand Push-up',icon:'↑',cat:'push',tier:7,x:215,
+   requires:['hspu-neg'],youtubeId:'b4sLFRHVCCE',
+   desc:'Vertical pressing from a handstand. Requires shoulder strength and balance.',
+   steps:['Wall handstand, chest to wall','Hollow body — no arch','Lower head to floor','Triangle base at bottom','Press to full lockout'],
+   goal:{type:'sets',sets:3,reps:5,label:'3 × 5 reps'},xp:180,legendary:true},
+
+  {id:'full-planche',name:'Full Planche',icon:'↑',cat:'push',tier:8,x:410,
+   requires:['straddle-planche'],youtubeId:'oqpK-lRMRSA',
+   desc:'Both legs together, body parallel to floor, arms straight. The pinnacle of pushing strength.',
+   steps:['From straddle, bring legs together','Hips must stay at shoulder level','Arms locked, no elbows bending','Body parallel to floor','This takes years of dedicated work'],
+   goal:{type:'time',value:2,label:'2 sec unbroken full hold'},xp:500,legendary:true},
+
+  {id:'free-hspu',name:'Freestanding HSPU',icon:'↑',cat:'push',tier:8,x:20,
+   requires:['hspu','free-hs'],youtubeId:'b4sLFRHVCCE',
+   desc:'Handstand push-up with no wall. Requires both world-class pressing strength and balance.',
+   steps:['Master 10 wall HSPU and 10s freestanding HS first','Kick into freestanding HS','Lower with control — use balance adjustments','Head to floor in triangle','Press back — maintain balance throughout'],
+   goal:{type:'sets',sets:1,reps:1,label:'1 clean freestanding HSPU'},xp:400,legendary:true},
+
+  // ── PULL (x 360–660) ──
+  {id:'dead-hang',name:'Dead Hang',icon:'↓',cat:'pull',tier:1,x:740,
+   requires:['root'],youtubeId:'_CQEG2cAaE8',
+   desc:'Just hang from a bar. Decompresses spine, builds grip, teaches shoulder packing.',
+   steps:['Overhand grip, shoulder-width','Full hang — shoulder blades can rise','Breathe, relax lower body','Build to 60 unbroken seconds','Daily practice — spinal traction'],
+   goal:{type:'time',value:60,label:'60 sec unbroken'},xp:15},
+
+  {id:'scap-pull',name:'Scapular Pull',icon:'↓',cat:'pull',tier:2,x:570,
+   requires:['dead-hang'],youtubeId:'MeHSMmfmxEk',
+   desc:'Retract shoulder blades DOWN from a hang without bending elbows. Lat activation drill.',
+   steps:['Dead hang, arms straight','Pull shoulder blades DOWN and BACK','Zero elbow bend','Body rises 3–5 cm','Lower slowly'],
+   goal:{type:'sets',sets:3,reps:10,label:'3 × 10 reps'},xp:25},
+
+  {id:'inv-row',name:'Inverted Row',icon:'↓',cat:'pull',tier:2,x:740,
+   requires:['dead-hang'],youtubeId:'pvRbHFvTkJY',
+   desc:'Lie under a low bar and pull chest to it. Horizontal pulling as important as vertical.',
+   steps:['Bar at waist height','Hang underneath — body a plank','Pull chest to bar, squeeze shoulder blades','Lower fully','Foot elevation adjusts difficulty'],
+   goal:{type:'sets',sets:3,reps:12,label:'3 × 12 reps'},xp:30},
+
+  {id:'support-hold',name:'Support Hold',icon:'↓',cat:'pull',tier:2,x:910,
+   requires:['dead-hang'],youtubeId:'eFgMnvFpbk8',
+   desc:'Support your bodyweight on rings or parallel bars with straight arms. Builds straight-arm strength required for ring skills.',
+   steps:['Grip rings or parallel bars','Press down to support your weight','Arms fully straight and locked','Shoulders depressed — not shrugged','Hold still and breathe'],
+   goal:{type:'time',value:30,label:'30 sec unbroken'},xp:30},
+
+  {id:'neg-pullup',name:'Negative Pull-up',icon:'↓',cat:'pull',tier:3,x:740,
+   requires:['scap-pull','inv-row'],youtubeId:'lFE5-uaYxrE',
+   desc:'Jump to top, lower over 8–10 seconds. Fastest bridge to your first pull-up.',
+   steps:['Jump to chin above bar','Lower over 5–10 sec — count out loud','Drop when control is gone','2 min rest between sets','3 quality reps beats 10 sloppy'],
+   goal:{type:'sets',sets:5,reps:3,label:'5 × 3 slow negatives'},xp:40},
+
+  {id:'chinup',name:'Chin-up',icon:'↓',cat:'pull',tier:4,x:570,
+   requires:['neg-pullup'],youtubeId:'brhRXlOhsAM',
+   desc:'Underhand grip. Bicep involvement makes this slightly easier than pull-ups.',
+   steps:['Underhand grip, shoulder-width','Full dead hang start','Pull — chin clears bar','Supinate as you pull','Lower fully between reps'],
+   goal:{type:'sets',sets:3,reps:8,label:'3 × 8 reps'},xp:55},
+
+  {id:'pullup',name:'Pull-up',icon:'↓',cat:'pull',tier:4,x:910,
+   requires:['neg-pullup'],youtubeId:'eGo4IYlbE5g',
+   desc:'Overhand grip, chin clears bar. Full dead hang every rep. Most important upper-body pull.',
+   steps:['Overhand grip, shoulder-width','Dead hang — full extension always','Pull elbows DOWN and BACK','Chin clears bar','2-sec eccentric every rep'],
+   goal:{type:'sets',sets:3,reps:8,label:'3 × 8 reps'},xp:65},
+
+  {id:'wide-pullup',name:'Wide-Grip Pull-up',icon:'↓',cat:'pull',tier:5,x:675,
+   requires:['pullup'],youtubeId:'M8XpDSyaVpI',
+   desc:'Wider grip maximises lat activation. The V-taper builder.',
+   steps:['Grip ~1.5× shoulder-width','Elbows point down and out','Focus on lats, not arms','Shorter ROM — heavier lat load','No excessive lean-back'],
+   goal:{type:'sets',sets:3,reps:8,label:'3 × 8 reps'},xp:65},
+
+  {id:'lsit-pullup',name:'L-Sit Pull-up',icon:'↓',cat:'pull',tier:5,x:805,
+   requires:['pullup','l-sit'],youtubeId:'_h4GpL7OAY0',
+   desc:'Maintain full L-sit throughout the entire pull-up. Back + core + hip flexors simultaneous.',
+   steps:['Hang — raise legs to L (parallel)','Maintain L throughout','Pull chin to bar with legs up','Lower to full hang, legs still up','Scale: one leg → both'],
+   goal:{type:'sets',sets:3,reps:5,label:'3 × 5 reps'},xp:90},
+
+  {id:'skin-cat',name:'Skin the Cat',icon:'↓',cat:'pull',tier:5,x:935,
+   requires:['support-hold'],youtubeId:'aP7AGbBDHuI',
+   desc:'Hang, tuck, rotate legs under and through to an inverted hang. Builds shoulder flexibility and straight-arm strength.',
+   steps:['Hang from rings or bar','Tuck knees to chest','Rotate backward under bar','Reach inverted hang','Reverse the movement to return'],
+   goal:{type:'sets',sets:3,reps:5,label:'3 × 5 reps'},xp:60},
+
+  {id:'typewriter-pull',name:'Typewriter Pull-up',icon:'↓',cat:'pull',tier:6,x:530,
+   requires:['wide-pullup'],youtubeId:'3BaRPFnMDlc',
+   desc:'Pull to one side, traverse to the other while holding height, lower. Extreme unilateral lat work.',
+   steps:['Wide grip, pull to right','Traverse left — hold height','Lower on left','Alternate direction','Start with partial traversals'],
+   goal:{type:'sets',sets:3,reps:4,label:'3 × 4 traversals'},xp:85},
+
+  {id:'muscle-up',name:'Muscle-up',icon:'↓',cat:'pull',tier:6,x:680,
+   requires:['wide-pullup','lsit-pullup'],youtubeId:'Joq9BOIIJTU',
+   legendary:true,
+   desc:'Pull-up and dip combined in one explosive movement. The benchmark bar skill.',
+   steps:['10 strict pull-ups + 10 strict dips minimum','Kip: hips swing forward on pull','Pull to nipple height minimum','Transition wrists over bar','Push to full lockout'],
+   goal:{type:'sets',sets:3,reps:3,label:'3 × 3 clean reps'},xp:200},
+
+  {id:'back-lever',name:'Back Lever',icon:'↓',cat:'pull',tier:6,x:840,
+   requires:['skin-cat'],youtubeId:'tiLBi0QSk5I',
+   desc:'From inverted hang, lower body to horizontal facing down. The partner to front lever.',
+   steps:['From skin the cat inverted hang','Slowly lower body to horizontal','Body faces DOWN, arms straight','Tuck → straddle → full progression','Easier than front lever for most'],
+   goal:{type:'time',value:5,label:'5 sec unbroken hold'},xp:120},
+
+  {id:'archer-pullup',name:'Archer Pull-up',icon:'↓',cat:'pull',tier:7,x:570,
+   requires:['typewriter-pull'],youtubeId:'5UJZsfRYqaY',
+   legendary:true,
+   desc:'Pull up with one arm nearly straight. Primary progression toward one-arm pull-up.',
+   steps:['Wide grip','Shift all weight to one arm','Other arm stays mostly straight','Alternate sides','One clean rep each side is elite'],
+   goal:{type:'sets',sets:3,reps:5,label:'3 × 5 each side'},xp:140},
+
+  {id:'ring-muscle-up',name:'Ring Muscle-up',icon:'↓',cat:'pull',tier:7,x:740,
+   requires:['muscle-up','skin-cat'],youtubeId:'Joq9BOIIJTU',
+   legendary:true,
+   desc:'Muscle-up on rings. Much harder due to instability — requires precise technique and strength.',
+   steps:['False grip is mandatory on rings','Same kip as bar muscle-up','Transition is the hardest part on rings','Turn rings out at top lockout','Practice false grip dead hangs first'],
+   goal:{type:'sets',sets:3,reps:3,label:'3 × 3 clean reps'},xp:250},
+
+  {id:'back-lever-full',name:'Back Lever (Full)',icon:'↓',cat:'pull',tier:7,x:910,
+   requires:['back-lever'],youtubeId:'tiLBi0QSk5I',
+   desc:'Full back lever with legs together and body perfectly horizontal. Clean static hold.',
+   steps:['Progress from tuck → straddle → full','Body completely straight','Arms locked, shoulders active','Face DOWN, parallel to floor','Hold still — no swinging'],
+   goal:{type:'time',value:5,label:'5 sec unbroken full hold'},xp:160,legendary:true},
+
+  {id:'one-arm-pullup',name:'One-Arm Pull-up',icon:'↓',cat:'pull',tier:8,x:740,
+   requires:['archer-pullup'],youtubeId:'5UJZsfRYqaY',
+   legendary:true,
+   desc:'Full bodyweight on one arm to chin above bar. Among the hardest bodyweight skills.',
+   steps:['Master clean archer pull-ups first','Use assisted method: towel in other hand','Pull with one arm — other assists minimally','Gradually reduce assistance over months','Expect 6–24 months of dedicated work'],
+   goal:{type:'sets',sets:1,reps:1,label:'1 clean rep each arm'},xp:400},
+
+  // ── CORE (x 700–990) ──
+  {id:'plank',name:'Plank',icon:'—',cat:'core',tier:1,x:1255,
+   requires:['root'],youtubeId:'ASdvN_XEl_c',
+   desc:'Forearms on floor, body a straight line. Foundation of all core training.',
+   steps:['Forearms down, elbows under shoulders','Straight line head to heels','Squeeze glutes → quads → abs','Breathe steadily','30s → 45s → 60s each week'],
+   goal:{type:'time',value:60,label:'60 sec unbroken'},xp:15},
+
+  {id:'hollow',name:'Hollow Body',icon:'—',cat:'core',tier:2,x:1070,
+   requires:['plank'],youtubeId:'LlDNef_Ztsc',
+   desc:'Lower back pressed into floor, legs and shoulders raised. THE gymnastics position.',
+   steps:['Lie on back, arms overhead','Press lower back HARD into floor','Lift legs + shoulders simultaneously','Slight "banana" curve','Regression: bend knees or arms at sides'],
+   goal:{type:'time',value:30,label:'30 sec unbroken'},xp:25},
+
+  {id:'arch',name:'Arch Hold',icon:'—',cat:'core',tier:2,x:1440,
+   requires:['plank'],youtubeId:'C0fMIk_jaHo',
+   desc:'Face down, lift arms and legs simultaneously. Counterpart to hollow — both essential.',
+   steps:['Face down, arms overhead','Lift arms + legs + chest','Squeeze glutes — they drive this','Rigid bow shape','Always pair with hollow body work'],
+   goal:{type:'time',value:30,label:'30 sec unbroken'},xp:20},
+
+  {id:'hollow-rock',name:'Hollow Rock',icon:'—',cat:'core',tier:3,x:1060,
+   requires:['hollow'],youtubeId:'LlDNef_Ztsc',
+   desc:'Maintain hollow body position while rocking forward and back. Teaches you to hold position dynamically.',
+   steps:['Get into hollow body hold','Without breaking shape, rock forward','Rock back — body stays rigid','Think: one piece rocking chair','If shape breaks, pause and reset'],
+   goal:{type:'sets',sets:3,reps:15,label:'3 × 15 rocks'},xp:30},
+
+  {id:'arch-rock',name:'Arch Rock',icon:'—',cat:'core',tier:3,x:1320,
+   requires:['arch'],youtubeId:'C0fMIk_jaHo',
+   desc:'Rock in the arch position. Builds posterior chain endurance dynamically.',
+   steps:['Get into arch hold','Without breaking shape, rock forward and back','Body stays rigid throughout','Pairs with hollow rocks in drills','Essential gymnastics conditioning'],
+   goal:{type:'sets',sets:3,reps:15,label:'3 × 15 rocks'},xp:25},
+
+  {id:'hang-knee',name:'Hanging Knee Raise',icon:'—',cat:'core',tier:3,x:1190,
+   requires:['hollow','dead-hang'],youtubeId:'rI0TAnfnQgo',
+   desc:'Hang from bar, raise knees to chest. No swing. Gateway to toes-to-bar and L-sit.',
+   steps:['Dead hang — zero swing','Brace core first, then lift knees','Pause at top','Lower slowly','Any swing: stop, reset'],
+   goal:{type:'sets',sets:3,reps:12,label:'3 × 12 reps'},xp:35},
+
+  {id:'ab-wheel',name:'Ab Wheel',icon:'—',cat:'core',tier:3,x:1450,
+   requires:['hollow'],youtubeId:'7DVEhVTKFOc',
+   desc:'Roll forward until arms extend overhead. Pure anti-extension challenge. Back must stay flat.',
+   steps:['Kneel, wheel under shoulders','Roll forward, arms extending','Stop before back arches','Pull back via core — not momentum','Widen range progressively'],
+   goal:{type:'sets',sets:3,reps:8,label:'3 × 8 reps'},xp:50},
+
+  {id:'leg-raise',name:'Hanging Leg Raise',icon:'—',cat:'core',tier:4,x:1070,
+   requires:['hang-knee'],youtubeId:'hdng3kMD4xs',
+   desc:'Straight legs to 90° from dead hang. No swing, lower back neutral.',
+   steps:['Dead hang, zero swing','Ribs down, lower back flat','Raise straight legs to parallel+','No arch in lower back','3-second lowering phase'],
+   goal:{type:'sets',sets:3,reps:10,label:'3 × 10 reps'},xp:50},
+
+  {id:'l-sit',name:'L-Sit Hold',icon:'—',cat:'core',tier:4,x:1440,
+   requires:['hang-knee','ab-wheel'],youtubeId:'IUZJoSP66HI',
+   desc:'Seated mid-air on parallettes, legs parallel to floor. Arms locked, shoulders depressed.',
+   steps:['Parallettes, dip bars, or chairs','Arms fully locked','Shoulders pushed DOWN and BACK','Tuck L → one leg → full L','10s is great — build to 30s'],
+   goal:{type:'time',value:10,label:'10 sec unbroken L-sit'},xp:80},
+
+  {id:'toes-bar',name:'Toes to Bar',icon:'—',cat:'core',tier:5,x:1070,
+   requires:['leg-raise'],youtubeId:'_03pCKOv4l4',
+   desc:'From dead hang, toes touch the bar. Hip flexor strength, hamstring flexibility, lat engagement.',
+   steps:['Dead hang, hollow body','Lat pull-down then hip flexion','Toes UP to touch bar','Control the descent','Lats and core together'],
+   goal:{type:'sets',sets:3,reps:8,label:'3 × 8 reps'},xp:70},
+
+  {id:'dragon-flag',name:'Dragon Flag',icon:'—',cat:'core',tier:5,x:1255,
+   requires:['leg-raise','arch'],youtubeId:'njKBIqDPXJo',
+   desc:'Lie on bench, grip overhead, lower as one rigid unit. No hip break. Bruce Lee\'s signature.',
+   steps:['Lie on bench, grip behind head','Raise body to vertical','Lower as ONE rigid unit','Support only on upper back','Tuck variation first'],
+   goal:{type:'sets',sets:3,reps:5,label:'3 × 5 reps'},xp:90},
+
+  {id:'v-sit',name:'V-Sit',icon:'—',cat:'core',tier:5,x:1440,
+   requires:['l-sit'],youtubeId:'IUZJoSP66HI',
+   desc:'Like an L-sit but legs raised above horizontal — forming a V. Requires exceptional compression strength.',
+   steps:['Start from L-sit position','Raise legs above 90° — aim for 45° above horizontal','Maintain straight arms and locked shoulders','Core and hip flexors working maximally','Progress: L-sit → 45° → full V-sit'],
+   goal:{type:'time',value:5,label:'5 sec unbroken V-sit'},xp:110},
+
+  {id:'front-lever-tuck',name:'Tuck Front Lever',icon:'—',cat:'core',tier:6,x:1440,
+   requires:['dragon-flag','l-sit'],youtubeId:'tiLBi0QSk5I',
+   desc:'Hang, pull body to horizontal face-up with knees tucked. The first front lever progression.',
+   steps:['Dead hang','Pull and retract scapulae to bring hips up','Tuck knees tight to chest','Body should be roughly horizontal','Arms straight throughout'],
+   goal:{type:'time',value:10,label:'10 sec unbroken tuck hold'},xp:100},
+
+  {id:'human-flag-tuck',name:'Tuck Human Flag',icon:'—',cat:'core',tier:6,x:1070,
+   requires:['dragon-flag'],youtubeId:'N_9AqWJj4xI',
+   desc:'Hold a vertical pole, tuck knees, and hold body horizontal sideways. The first human flag progression.',
+   steps:['Grip a vertical pole firmly — one hand over, one under','Push with bottom arm, pull with top arm','Tuck knees to reduce lever','Hold body roughly horizontal','Progression: tuck → straddle → full'],
+   goal:{type:'time',value:3,label:'3 sec unbroken tuck hold'},xp:100},
+
+  {id:'front-lever',name:'Front Lever',icon:'—',cat:'core',tier:7,x:1440,
+   requires:['front-lever-tuck'],youtubeId:'tiLBi0QSk5I',
+   legendary:true,
+   desc:'Body parallel to ground face-up, arms straight. One of the most demanding gymnastics holds.',
+   steps:['Tuck → straddle → one-leg → full','Arms completely straight','Pull bar toward hips','Retract and depress scapulae','Full version: 6–18 months work'],
+   goal:{type:'time',value:5,label:'5 sec unbroken full hold'},xp:250},
+
+  {id:'human-flag',name:'Human Flag',icon:'—',cat:'core',tier:7,x:1070,
+   requires:['human-flag-tuck'],youtubeId:'N_9AqWJj4xI',
+   legendary:true,
+   desc:'Full horizontal hold sideways on a vertical pole. Requires extraordinary lateral core and shoulder strength.',
+   steps:['Grip pole tightly, arms shoulder-width apart','Push bottom arm hard, pull top arm hard','Body forms horizontal line','Tuck → straddle → full progression','Often takes 12+ months to achieve'],
+   goal:{type:'time',value:3,label:'3 sec unbroken full hold'},xp:300},
+
+  {id:'manna',name:'Manna',icon:'—',cat:'core',tier:8,x:1255,
+   requires:['front-lever','v-sit'],youtubeId:'IUZJoSP66HI',
+   legendary:true,
+   desc:'Seated, legs raised vertical, body leaned back — inverted L-sit. Possibly the hardest bodyweight static hold.',
+   steps:['Master V-sit completely first','Progressively lean back as legs rise higher','Eventually legs point straight up while seated','Extraordinary wrist, shoulder, and compression strength required','Considered a peak gymnastics achievement'],
+   goal:{type:'time',value:2,label:'2 sec unbroken hold'},xp:500},
+
+  // ── LEGS (x 920–1220) ──
+  {id:'squat',name:'Air Squat',icon:'↕',cat:'legs',tier:1,x:1735,
+   requires:['root'],youtubeId:'aclHkVaku9U',
+   desc:'Feet shoulder-width, squat to parallel or deeper. The fundamental lower-body movement.',
+   steps:['Feet shoulder-width, toes slightly out','Hips back AND down','Break parallel','Drive through heels','Chest up, neutral spine'],
+   goal:{type:'sets',sets:3,reps:20,label:'3 × 20 reps'},xp:15},
+
+  {id:'glute-bridge',name:'Single-Leg Glute Bridge',icon:'↕',cat:'legs',tier:2,x:1600,
+   requires:['squat'],youtubeId:'ot7j6iZEJwE',
+   desc:'Lie on back, one foot on floor, drive hips up. Isolated glute and hamstring builder.',
+   steps:['Lie on back, one knee bent — foot on floor','Other leg straight, raised slightly','Drive through foot to lift hips up','Squeeze glute at top — full hip extension','Lower slowly and repeat'],
+   goal:{type:'sets',sets:3,reps:15,label:'3 × 15 each leg'},xp:20},
+
+  {id:'lunge',name:'Reverse Lunge',icon:'↕',cat:'legs',tier:2,x:1735,
+   requires:['squat'],youtubeId:'xrPteyQLGAo',
+   desc:'Step back, lower rear knee to floor. Easier on knees than forward lunge.',
+   steps:['Step directly backward','Rear knee toward floor','Front shin vertical','Push through front heel','Alternate legs'],
+   goal:{type:'sets',sets:3,reps:12,label:'3 × 12 each leg'},xp:25},
+
+  {id:'jump-squat',name:'Jump Squat',icon:'↕',cat:'legs',tier:2,x:1870,
+   requires:['squat'],youtubeId:'Azl5tkCzDcc',
+   desc:'Squat and explode into a jump. Develops explosive power. Land softly.',
+   steps:['Squat to parallel','Swing arms for propulsion','Full extension at takeoff','Land softly — forefoot then heel','Brief pause between reps'],
+   goal:{type:'sets',sets:3,reps:15,label:'3 × 15 reps'},xp:30},
+
+  {id:'bss',name:'Bulgarian Split Squat',icon:'↕',cat:'legs',tier:3,x:1600,
+   requires:['lunge','jump-squat'],youtubeId:'2C-uNgKwPLE',
+   desc:'Rear foot elevated, single-leg squat to depth. Possibly the best bodyweight leg exercise.',
+   steps:['Rear foot on bench 45–60 cm behind','Front foot forward: vertical shin','Lower rear knee toward floor','Drive through front heel','Front knee tracks over toe'],
+   goal:{type:'sets',sets:3,reps:10,label:'3 × 10 each leg'},xp:55},
+
+  {id:'step-up',name:'Box Step-up',icon:'↕',cat:'legs',tier:3,x:1870,
+   requires:['lunge'],youtubeId:'dQqApCGd5Ss',
+   desc:'Step onto a box and stand fully. Clean unilateral loading.',
+   steps:['Box at knee height','Full foot on box','Drive through HEEL','Full hip lockout at top','Control step down'],
+   goal:{type:'sets',sets:3,reps:12,label:'3 × 12 each leg'},xp:35},
+
+  {id:'nordic',name:'Nordic Curl',icon:'↕',cat:'legs',tier:4,x:1735,
+   requires:['bss','glute-bridge'],youtubeId:'ot7j6iZEJwE',
+   desc:'Kneel, feet anchored, lower via hamstrings only. Most effective bodyweight hamstring exercise.',
+   steps:['Kneel, feet anchored heavy','Hands at chest','Lower via hamstrings ONLY','Catch with hands when needed','Pull back — hamstrings + hands assist'],
+   goal:{type:'sets',sets:3,reps:5,label:'3 × 5 reps'},xp:65},
+
+  {id:'shrimp',name:'Shrimp Squat',icon:'↕',cat:'legs',tier:5,x:1600,
+   requires:['nordic','step-up'],youtubeId:'TKt0-c83GSc',
+   desc:'Single-leg squat holding rear ankle — rear knee taps floor. Strength + mobility + balance.',
+   steps:['Stand on one leg, bend other behind','Hold rear ankle same-side hand','Squat until rear knee taps floor','Drive through heel to return','Wall support at first'],
+   goal:{type:'sets',sets:3,reps:5,label:'3 × 5 each leg'},xp:85},
+
+  {id:'skater-squat',name:'Skater Squat',icon:'↕',cat:'legs',tier:5,x:1870,
+   requires:['bss'],youtubeId:'TKt0-c83GSc',
+   desc:'Single-leg squat with back leg extended behind. Knee nearly touches floor. Excellent balance and strength.',
+   steps:['Stand on one leg','Extend other leg behind you — not holding it','Lower until back knee nearly touches floor','Keep torso upright','Drive through heel to stand'],
+   goal:{type:'sets',sets:3,reps:8,label:'3 × 8 each leg'},xp:70},
+
+  {id:'pistol',name:'Pistol Squat',icon:'↕',cat:'legs',tier:6,x:1735,
+   requires:['shrimp','skater-squat'],youtubeId:'vq5-vdgJc0I',
+   legendary:true,
+   desc:'Single-leg full-depth squat, free leg extended forward. The pinnacle of leg strength.',
+   steps:['Extend one leg forward parallel to floor','Squat to absolute depth','Extended leg stays off ground','Drive through heel','Assisted → box → full'],
+   goal:{type:'sets',sets:3,reps:5,label:'3 × 5 each leg'},xp:160},
+
+  {id:'natural-legpress',name:'Natural Leg Press',icon:'↕',cat:'legs',tier:7,x:1870,
+   requires:['pistol'],youtubeId:'TKt0-c83GSc',
+   desc:'Kneel, sit back on heels, then explosively extend to standing using quads only. Brutal quad finisher.',
+   steps:['Kneel on mat','Sit back toward heels','Explosively extend knees to jump to standing','Land and immediately kneel back','This is extremely intense — use pad under knees'],
+   goal:{type:'sets',sets:3,reps:8,label:'3 × 8 reps'},xp:90},
+
+  {id:'jumping-pistol',name:'Jumping Pistol Squat',icon:'↕',cat:'legs',tier:7,x:1600,
+   requires:['pistol'],youtubeId:'vq5-vdgJc0I',
+   legendary:true,
+   desc:'Pistol squat with an explosive jump. The most demanding bodyweight leg movement.',
+   steps:['Pistol squat position','Lower to full depth on one leg','Explode upward off the single leg','Land softly on same leg','Control immediately into next rep'],
+   goal:{type:'sets',sets:2,reps:5,label:'2 × 5 each leg'},xp:200},
+
+  // ── BALANCE (x 1275–1600) ──
+  {id:'tripod',name:'Tripod Headstand',icon:'△',cat:'balance',tier:1,x:2220,
+   requires:['root'],youtubeId:'pFuEkmqMhkg',
+   desc:'Head and two hands form a triangle. Knees on triceps. First inversion.',
+   steps:['Head on mat, hands form triangle','Walk feet in — hips over head','Knees on triceps','Weight mostly on HANDS','Hold still, breathe'],
+   goal:{type:'time',value:30,label:'30 sec unbroken'},xp:20},
+
+  {id:'headstand',name:'Headstand',icon:'△',cat:'balance',tier:2,x:2030,
+   requires:['tripod'],youtubeId:'pFuEkmqMhkg',
+   desc:'Full headstand, legs vertical. Builds inversion comfort and neck strength.',
+   steps:['From tripod, legs up one at a time','Stack: hips over shoulders, legs straight','Weight on HANDS not head','Core engaged','Wall nearby first'],
+   goal:{type:'time',value:30,label:'30 sec unbroken'},xp:35},
+
+  {id:'elbow-lever',name:'Elbow Lever',icon:'△',cat:'balance',tier:2,x:2410,
+   requires:['plank'],youtubeId:'CEFbFweKm4k',
+   desc:'Balance with elbows digging into abdomen, body horizontal. A feather-light trick that looks impressive.',
+   steps:['Squat down, place palms on floor','Dig both elbows into hip / lower abdomen area','Lean forward, lifting feet off floor','Body horizontal — arms as balance point','Easier than it looks — very wrist-joint friendly'],
+   goal:{type:'time',value:10,label:'10 sec unbroken'},xp:40},
+
+  {id:'wall-hs',name:'Wall Handstand',icon:'△',cat:'balance',tier:3,x:2030,
+   requires:['headstand','plank'],youtubeId:'LsEbzBYNx4o',
+   desc:'Chest-to-wall handstand. Teaches alignment: wrists, shoulders, hips, ankles stacked. Hollow body.',
+   steps:['Walk hands close to wall facing it','Kick up, chest to wall','Stack: wrists, shoulders, hips, ankles','Hollow body — ribs in','Build to 60s before progressing'],
+   goal:{type:'time',value:60,label:'60 sec unbroken'},xp:55},
+
+  {id:'crow-pose',name:'Crow Pose',icon:'△',cat:'balance',tier:3,x:2410,
+   requires:['elbow-lever'],youtubeId:'CEFbFweKm4k',
+   desc:'Squat, place hands on floor, rest knees on backs of arms, lean forward until feet lift. First arm balance.',
+   steps:['Squat with feet close, palms shoulder-width on floor','Place knees on backs of upper arms (triceps)','Lean forward gradually — weight shifts to hands','Lift one foot, then both','Look forward — not down'],
+   goal:{type:'time',value:10,label:'10 sec unbroken'},xp:45},
+
+  {id:'hs-kick',name:'Handstand Kick-up',icon:'△',cat:'balance',tier:4,x:2030,
+   requires:['wall-hs'],youtubeId:'8oL8YQYcPyQ',
+   desc:'Practice the kick-up into handstand. The entry is a skill in itself.',
+   steps:['Wall behind for safety','Lunge, hands shoulder-width','Kick lead leg, follow with second','Find balance point','Controlled — not slamming wall'],
+   goal:{type:'sets',sets:5,reps:5,label:'5 sets × 5 kick-ups'},xp:45},
+
+  {id:'forearm-stand',name:'Forearm Stand',icon:'△',cat:'balance',tier:4,x:2220,
+   requires:['wall-hs'],youtubeId:'CEFbFweKm4k',
+   desc:'Balance on forearms, legs vertical. Less wrist pressure than handstand. Builds inversion endurance.',
+   steps:['Forearms parallel on mat','Kick up with wall nearby','Stack: forearms, shoulders, hips, feet','Core and glutes engaged','Shoulder endurance builder'],
+   goal:{type:'time',value:30,label:'30 sec unbroken'},xp:50},
+
+  {id:'crane-pose',name:'Crane Pose',icon:'△',cat:'balance',tier:4,x:2410,
+   requires:['crow-pose'],youtubeId:'CEFbFweKm4k',
+   desc:'Like crow but arms fully straightened. Much harder — true arm balance.',
+   steps:['Start in crow pose','Gradually straighten arms by pushing floor away','Maintain balance — tiny lean forward','This is harder than it looks','Takes significant practice from crow pose'],
+   goal:{type:'time',value:5,label:'5 sec unbroken'},xp:70},
+
+  {id:'free-hs',name:'Freestanding HS',icon:'△',cat:'balance',tier:5,x:2030,
+   requires:['hs-kick','forearm-stand'],youtubeId:'KHZGMQmVMuE',
+   legendary:true,
+   desc:'Balance on hands, no wall. Fingertip micro-corrections. Expect 6–12 months of daily practice.',
+   steps:['Learn to bail (forward roll) first','Fingertip pressure micro-adjustments','Hollow body: ribs down, no banana','Kick slightly past vertical','15+ min daily — no shortcuts'],
+   goal:{type:'time',value:10,label:'10 sec unbroken freestanding'},xp:200},
+
+  {id:'planche-lean',name:'Planche Lean',icon:'△',cat:'balance',tier:6,x:2410,
+   requires:['crane-pose','pseudo-planche-push'],youtubeId:'x9KuMVd9cuc',
+   desc:'Hands pointing back, lean entire body forward in a plank. Progressive planche conditioning.',
+   steps:['Hands at hip level, fingers pointing back','Lean forward — body in straight line','Hold a forward lean position','Gradually increase angle over weeks','This directly trains planche position'],
+   goal:{type:'time',value:10,label:'10 sec lean hold'},xp:80},
+
+  {id:'hs-walk',name:'Handstand Walk',icon:'△',cat:'balance',tier:6,x:2220,
+   requires:['free-hs'],youtubeId:'JrcTXdKFWQo',
+   legendary:true,
+   desc:'Walk on your hands. Slight forward lean, small steps. Goal: 10 metres.',
+   steps:['Kick into HS, allow slight forward lean','Walk hands at pace of lean','Small steps, fingers grip floor','Look ~1m ahead of hands','2m → 5m → 10m+'],
+   goal:{type:'sets',sets:1,reps:1,label:'10 metre walk'},xp:180},
+
+  {id:'press-hs',name:'Press to Handstand',icon:'△',cat:'balance',tier:7,x:2220,
+   requires:['free-hs','l-sit'],youtubeId:'KHZGMQmVMuE',
+   legendary:true,
+   desc:'From an L-sit or straddle-seated position, press slowly to a handstand. Requires extraordinary straight-arm shoulder strength.',
+   steps:['Start in L-sit or straddle seated position','Lean forward, weight to hands','Slowly raise legs — straight arms throughout','Reach handstand position','This takes years for most people'],
+   goal:{type:'sets',sets:1,reps:1,label:'1 clean press to handstand'},xp:350},
+
+  {id:'one-arm-hs',name:'One-Arm Handstand',icon:'△',cat:'balance',tier:8,x:2220,
+   requires:['free-hs','press-hs'],youtubeId:'KHZGMQmVMuE',
+   legendary:true,
+   desc:'Balance on a single hand. One of the most elite calisthenics skills imaginable.',
+   steps:['Achieve consistent 30s freestanding HS first','Practice weight shifting from hand to hand','One-arm negatives: lower to floor on one arm','Work with a coach or on parallettes initially','Expect 2–5 years of dedicated handstand training'],
+   goal:{type:'time',value:2,label:'2 sec one-arm hold'},xp:600},
+];
+
+const SKILL_MAP=Object.fromEntries(SKILLS.map(s=>[s.id,s]));
+
+function getProgress(skill){
+  if(isCompleted(skill.id))return 1;
+  const g=skill.goal,logs=STATE.logs[skill.id]||[];
+  if(g.type==='unlock')return 1;
+  if(g.type==='time'){const best=logs.reduce((m,l)=>Math.max(m,l.val),0);return Math.min(1,best/g.value);}
+  if(g.type==='sets'){const q=logs.filter(l=>l.val>=g.reps).length;return Math.min(1,q/g.sets);}
+  return 0;
+}
+function isGoalMet(skill){
+  if(isCompleted(skill.id))return true;
+  if(skill.goal.type==='unlock')return true;
+  return getProgress(skill)>=1;
+}
+function getProgressHint(skill){
+  const g=skill.goal,logs=STATE.logs[skill.id]||[];
+  if(g.type==='time'){const b=logs.reduce((m,l)=>Math.max(m,l.val),0);return `Best single hold: ${b}s  \xb7  Need: ${g.value}s`;}
+  if(g.type==='sets'){const q=logs.filter(l=>l.val>=g.reps).length;return `${q}/${g.sets} qualifying sets  \xb7  Need \u2265${g.reps} reps each`;}
+  return'';
+}
+
+const DB_KEY='cali_v6';
+let STATE={completed:['root'],xp:0,logs:{}};
+let _completedSet=new Set(['root']);
+let _syncTimer=null;
+try{
+  const s=JSON.parse(localStorage.getItem(DB_KEY));
+  if(s&&Array.isArray(s.completed)){STATE=s;}
+  if(!STATE.logs)STATE.logs={};
+  if(!STATE.completed.includes('root'))STATE.completed.push('root');
+  _completedSet=new Set(STATE.completed);
+}catch(e){}
+
+function saveState(){
+  try{localStorage.setItem(DB_KEY,JSON.stringify(STATE));}catch(e){}
+  clearTimeout(_syncTimer);
+  _syncTimer=setTimeout(syncToFirebase,3000);
+}
+function isCompleted(id){return _completedSet.has(id);}
+function isAvailable(skill){
+  if(skill.id==='root')return true;
+  return skill.requires.every(r=>isCompleted(r));
+}
+function getStatus(skill){
+  if(isCompleted(skill.id))return'completed';
+  if(isAvailable(skill))return'available';
+  return'locked';
+}
+
+const cWrap=document.getElementById('canvas-wrap');
+const cEl=document.getElementById('canvas');
+const svgEl=document.getElementById('tree-svg');
+const nodesEl=document.getElementById('tree-nodes');
+let cam={x:0,y:0,z:1},drag={on:false,sx:0,sy:0,cx:0,cy:0},pinchDist=0,_rafId=null;
+
+cEl.style.width=CW+'px';cEl.style.height=CH+'px';
+
+function applyCam(){
+  if(_rafId)return;
+  _rafId=requestAnimationFrame(()=>{
+    cEl.style.transform=`translate(${cam.x}px,${cam.y}px) scale(${cam.z})`;
+    _rafId=null;
+  });
+}
+function zoomTo(nz,px,py){
+  nz=Math.min(3,Math.max(0.12,nz));
+  cam.x=px-(px-cam.x)/cam.z*nz;
+  cam.y=py-(py-cam.y)/cam.z*nz;
+  cam.z=nz;applyCam();
+}
+function resetCam(){
+  const vw=cWrap.clientWidth,vh=cWrap.clientHeight;
+  const z=Math.min(0.88,vw/(CW+60),vh/(CH+60));
+  cam.x=Math.round((vw-CW*z)/2);cam.y=Math.round((vh-CH*z)/2);cam.z=z;applyCam();
+}
+cWrap.addEventListener('mousedown',e=>{
+  if(e.target.closest('.node'))return;
+  drag={on:true,sx:e.clientX,sy:e.clientY,cx:cam.x,cy:cam.y};
+  cWrap.classList.add('panning');
+});
+window.addEventListener('mousemove',e=>{if(!drag.on)return;cam.x=drag.cx+(e.clientX-drag.sx);cam.y=drag.cy+(e.clientY-drag.sy);applyCam();});
+window.addEventListener('mouseup',()=>{drag.on=false;cWrap.classList.remove('panning');});
+cWrap.addEventListener('wheel',e=>{
+  e.preventDefault();
+  const r=cWrap.getBoundingClientRect();
+  zoomTo(cam.z*(e.deltaY<0?1.1:0.91),e.clientX-r.left,e.clientY-r.top);
+},{passive:false});
+cWrap.addEventListener('touchstart',e=>{
+  if(e.touches.length===1)drag={on:true,sx:e.touches[0].clientX,sy:e.touches[0].clientY,cx:cam.x,cy:cam.y};
+  else if(e.touches.length===2){drag.on=false;pinchDist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);}
+},{passive:true});
+cWrap.addEventListener('touchmove',e=>{
+  e.preventDefault();
+  if(e.touches.length===1&&drag.on){cam.x=drag.cx+(e.touches[0].clientX-drag.sx);cam.y=drag.cy+(e.touches[0].clientY-drag.sy);applyCam();}
+  else if(e.touches.length===2){
+    const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    const r=cWrap.getBoundingClientRect();
+    const mx=(e.touches[0].clientX+e.touches[1].clientX)/2-r.left;
+    const my=(e.touches[0].clientY+e.touches[1].clientY)/2-r.top;
+    zoomTo(cam.z*d/pinchDist,mx,my);pinchDist=d;
+  }
+},{passive:false});
+cWrap.addEventListener('touchend',()=>{drag.on=false;});
+document.getElementById('z-in').onclick=()=>zoomTo(cam.z*1.2,cWrap.clientWidth/2,cWrap.clientHeight/2);
+document.getElementById('z-out').onclick=()=>zoomTo(cam.z/1.2,cWrap.clientWidth/2,cWrap.clientHeight/2);
+document.getElementById('z-rst').onclick=resetCam;
+
+function buildTree(){
+  svgEl.innerHTML='';
+  nodesEl.innerHTML='';
+  const CAT_COLS={push:215,pull:630,core:1020,legs:1390,balance:1760};
+  Object.entries(CAT_COLS).forEach(([cat,cx])=>{
+    const d=document.createElement('div');d.className='cat-label';
+    d.textContent=CAT_NAME[cat];d.style.cssText=`left:${cx}px;top:${TY[0]+ROOT_H+8}px;`;
+    nodesEl.appendChild(d);
+  });
+  SKILLS.forEach(skill=>{
+    skill.requires.forEach(reqId=>{
+      const req=SKILL_MAP[reqId];if(!req)return;
+      const cx2=skill.x+NW/2,cy2=TY[skill.tier]+NH;
+      const cx1=req.id==='root'?req.x+ROOT_W/2:req.x+NW/2;
+      const cy1=req.id==='root'?TY[0]:TY[req.tier];
+      const midY=(cy1+cy2)/2;
+      const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+      path.setAttribute('d',`M ${cx2} ${cy2} L ${cx2} ${midY} L ${cx1} ${midY} L ${cx1} ${cy1}`);
+      path.setAttribute('fill','none');
+      let cls='branch';
+      if(isCompleted(skill.id)&&isCompleted(reqId))cls+=' unlocked';
+      else if(isAvailable(skill)&&isCompleted(reqId))cls+=' available';
+      else if(skill.legendary||req.legendary)cls+=' legendary-line';
+      path.setAttribute('class',cls);svgEl.appendChild(path);
+    });
+  });
+  SKILLS.forEach(skill=>{
+    const y=TY[skill.tier];
+    const n=document.createElement('div');
+    if(skill.id==='root'){
+      n.className='node root';n.style.cssText=`left:${skill.x}px;top:${y}px;width:${ROOT_W}px;height:${ROOT_H}px;`;
+      n.innerHTML=`<span class="node-name">Calitree</span>`;
+      nodesEl.appendChild(n);return;
+    }
+    const st=getStatus(skill),prog=getProgress(skill);
+    let cls=`node ${st}`;if(skill.legendary)cls+=' legendary';
+    n.className=cls;n.id=`node-${skill.id}`;
+    n.style.cssText=`left:${skill.x}px;top:${y}px;`;
+    const badge=st==='completed'?(skill.legendary?'\u2605':'\u2713'):st==='available'?'ready':'';
+    n.innerHTML=`<div class="node-header"><div class="node-cat" style="background:${CAT_DOT[skill.cat]||'#666'}"></div><span class="node-badge">${badge}</span></div><div class="node-name">${skill.name}</div><div class="node-progress"><div class="node-progress-fill" style="width:${Math.round(prog*100)}%"></div></div>`;
+    n.addEventListener('click',()=>openModal(skill.id));
+    nodesEl.appendChild(n);
+  });
+}
+
+function updateHeader(){
+  const done=STATE.completed.filter(id=>id!=='root').length;
+  document.getElementById('h-done').textContent=done;
+  document.getElementById('h-total').textContent=SKILLS.length-1;
+  document.getElementById('h-xp').textContent=STATE.xp;
+  let xp=STATE.xp,lv=1;
+  const req=l=>100+(l-1)*75;
+  while(xp>=req(lv)){xp-=req(lv);lv++;}
+  document.getElementById('h-lvl').textContent=lv;
+  document.getElementById('h-xp-fill').style.width=Math.round(xp/req(lv)*100)+'%';
+}
+
+let _curSkill=null;
+function openModal(id){
+  _curSkill=id;const skill=SKILL_MAP[id];if(!skill)return;
+  const st=getStatus(skill),isDone=isCompleted(id),isAvail=isAvailable(skill),isLocked=st==='locked';
+  const iconEl=document.getElementById('m-icon');
+  iconEl.style.background=isDone?'var(--a-dim)':skill.legendary?'var(--lg-dim)':'';
+  document.getElementById('m-title').textContent=skill.name;
+  document.getElementById('m-title').style.color=isDone?(skill.legendary?'var(--lg)':'var(--a)'):'var(--tx0)';
+  document.getElementById('m-subtitle').textContent=`${CAT_NAME[skill.cat]||skill.cat}  \xb7  ${skill.legendary?'\u2605 Legendary':'Tier '+skill.tier}`;
+  const body=document.getElementById('m-body');body.innerHTML='';
+  if(isLocked){
+    const reqNames=skill.requires.filter(r=>!isCompleted(r)).map(r=>{const s=SKILL_MAP[r];return s?s.name:r;});
+    const el=mk('div','m-locked');
+    el.innerHTML=`<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="4" y="7" width="8" height="7" rx="1"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>Complete first: ${reqNames.join(', ')}`;
+    body.appendChild(el);
+  }
+  if(skill.desc)body.appendChild(mksec([mklbl('About'),mktx('p','m-desc',skill.desc)]));
+  if(skill.youtubeId){
+    const ytId=skill.youtubeId;
+    const vw=mk('div','m-video-wrap');
+    const btn=mk('button','m-video-btn');
+    btn.innerHTML=`<div class="m-play-ring"><svg viewBox="0 0 16 16" fill="none"><polygon points="5,2 14,8 5,14" fill="currentColor"/></svg></div><span class="m-video-label">Watch tutorial</span>`;
+    btn.addEventListener('click',()=>{vw.innerHTML=`<iframe src="https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&rel=0&modestbranding=1" allowfullscreen allow="autoplay;encrypted-media"></iframe>`;});
+    vw.appendChild(btn);body.appendChild(vw);
+    const link=mk('a','m-yt-link');link.href=`https://www.youtube.com/watch?v=${ytId}`;link.target='_blank';link.rel='noopener noreferrer';link.textContent='Open on YouTube \u2192';
+    body.appendChild(link);
+  }
+  if(skill.steps&&skill.steps.length){
+    const list=mk('div','step-list');
+    skill.steps.forEach((s,i)=>{const row=mk('div','step-row');row.appendChild(mktx('div','step-num',String(i+1)));row.appendChild(mktx('div','step-text',s));list.appendChild(row);});
+    body.appendChild(mksec([mklbl('How to do it'),list]));
+  }
+  if(skill.requires.length){
+    const chips=mk('div','req-chips');
+    skill.requires.forEach(r=>{const rs=SKILL_MAP[r];const met=isCompleted(r);chips.appendChild(mktx('span',`req-chip${met?' met':''}`,`${met?'\u2713 ':'○ '}${rs?rs.name:r}`));});
+    body.appendChild(mksec([mklbl('Requires'),chips]));
+  }
+  if(skill.goal.type!=='unlock'&&!isLocked)body.appendChild(buildGoalCard(skill,isDone));
+  if(isDone){
+    const banner=mk('div',`done-banner${skill.legendary?' legendary':''}`);
+    banner.innerHTML=`<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3,8 6.5,11.5 13,5"/></svg><div class="done-text"><div class="done-title">${skill.legendary?'Legendary achieved':'Skill completed'}</div><div class="done-sub">+${skill.xp} xp earned</div></div>`;
+    body.appendChild(banner);
+    const undo=mktx('button','action-btn ghost','\u21a9 Mark as not completed');
+    undo.onclick=()=>{undoSkill(id);closeModal();};body.appendChild(undo);
+  }else if(isAvail){
+    const met=isGoalMet(skill);
+    const btn=mktx('button',`action-btn${met?' ready':''}`,met?`Mark complete  \xb7  +${skill.xp} xp`:'Log progress above to unlock');
+    if(met)btn.onclick=()=>completeSkill(id);body.appendChild(btn);
+  }else{
+    body.appendChild(mktx('button','action-btn','Complete requirements to unlock'));
+  }
+  document.getElementById('modal-bg').classList.add('open');
+  document.getElementById('modal').scrollTop=0;
+}
+
+function buildGoalCard(skill,isDone){
+  const g=skill.goal,prog=getProgress(skill),pct=Math.round(Math.min(1,prog)*100);
+  const logs=(STATE.logs[skill.id]||[]).slice().reverse().slice(0,8);
+  const unit=g.type==='time'?'sec':'reps',ph=g.type==='time'?String(g.value):String(g.reps);
+  const card=mk('div','goal-card');
+  const row=mk('div','goal-row');
+  row.appendChild(mktx('span','goal-name',`Goal: ${g.label}`));
+  row.appendChild(mktx('span','goal-pct',`${pct}%`));card.appendChild(row);
+  const track=mk('div','goal-track');const fill=mk('div','goal-fill');
+  fill.style.width=pct+'%';
+  if(pct>=100)fill.style.background='var(--a)';
+  else if(pct>40)fill.style.background='var(--tx2)';
+  track.appendChild(fill);card.appendChild(track);
+  const hint=getProgressHint(skill);if(hint)card.appendChild(mktx('div','goal-hint',hint));
+  if(!isDone){
+    const ls=mksec([mklbl('Log a session')]);
+    const lr=mk('div','log-row');
+    const inp=mk('input','log-input');inp.type='number';inp.min='1';inp.placeholder=ph;inp.id=`log-${skill.id}`;
+    inp.addEventListener('keydown',e=>{if(e.key==='Enter')addLog(skill.id);});
+    lr.appendChild(inp);lr.appendChild(mktx('span','log-unit',unit));
+    const btn=mktx('button','log-btn','Log');btn.onclick=()=>addLog(skill.id);lr.appendChild(btn);
+    ls.appendChild(lr);card.appendChild(ls);
+  }
+  const hs=mksec([mklbl('Session history')]);
+  const hist=mk('div','log-history');
+  if(!logs.length)hist.appendChild(mktx('div','log-empty','No sessions logged yet'));
+  else logs.forEach(log=>{
+    const entry=mk('div','log-entry');
+    const good=g.type==='sets'?log.val>=g.reps:log.val>=g.value;
+    entry.appendChild(mktx('span',good?'log-val good':'log-val',`${log.val} ${unit}`));
+    entry.appendChild(mktx('span','log-date',fmtDate(log.ts)));
+    hist.appendChild(entry);
+  });
+  hs.appendChild(hist);card.appendChild(hs);return card;
+}
+
+function addLog(id){
+  const skill=SKILL_MAP[id];if(!skill||isCompleted(id))return;
+  const inp=document.getElementById(`log-${id}`);
+  const val=parseFloat(inp.value);if(!val||val<=0){inp.focus();return;}
+  if(!STATE.logs[id])STATE.logs[id]=[];
+  STATE.logs[id].push({val,ts:Date.now()});saveState();inp.value='';
+  const g=skill.goal;let msg;
+  if(g.type==='time')msg=val>=g.value?`${val}s \u2014 goal reached!`:`${val}s logged \xb7 need ${g.value}s in one hold`;
+  else{const q=STATE.logs[id].filter(l=>l.val>=g.reps).length;msg=val>=g.reps?`Set ${q}/${g.sets} qualifying`:`${val} reps \xb7 need \u2265${g.reps}`;}
+  showToast(msg);openModal(id);buildTree();
+}
+function completeSkill(id){
+  const skill=SKILL_MAP[id];if(!skill||isCompleted(id))return;
+  STATE.completed.push(id);_completedSet.add(id);STATE.xp+=skill.xp;
+  saveState();showToast(`${skill.name} complete \xb7 +${skill.xp} xp`);
+  closeModal();buildTree();updateHeader();
+}
+function undoSkill(id){
+  const skill=SKILL_MAP[id];if(!skill)return;
+  STATE.completed=STATE.completed.filter(c=>c!==id);_completedSet.delete(id);
+  STATE.xp=Math.max(0,STATE.xp-skill.xp);saveState();buildTree();updateHeader();
+}
+function closeModal(){document.getElementById('modal-bg').classList.remove('open');_curSkill=null;}
+document.getElementById('modal-bg').addEventListener('click',e=>{if(e.target===document.getElementById('modal-bg'))closeModal();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+
+let coachOpen=false;
+const GROQ_URL='https://api.groq.com/openai/v1/chat/completions';
+const GROQ_MODEL='llama-3.3-70b-versatile';
+function getApiKey(){return localStorage.getItem('cali_groq_key')||'';}
+function setApiKey(k){localStorage.setItem('cali_groq_key',k);}
+function updateKeyStatus(){
+  const k=getApiKey();
+  const dot=document.getElementById('cp-dot');const lbl=document.getElementById('cp-key-lbl');
+  if(k){dot.classList.add('active');lbl.textContent='Key set';}
+  else{dot.classList.remove('active');lbl.textContent='No key';}
+}
+function promptApiKey(){
+  const k=prompt('Enter your Groq API key (free at console.groq.com):');
+  if(k&&k.trim()){setApiKey(k.trim());updateKeyStatus();showToast('API key saved');}
+}
+function toggleCoach(){
+  coachOpen=!coachOpen;
+  document.getElementById('coach-panel').classList.toggle('open',coachOpen);
+  document.getElementById('coach-toggle').classList.toggle('active',coachOpen);
+  if(window.innerWidth>700)document.getElementById('canvas-wrap').classList.toggle('coach-open',coachOpen);
+}
+function buildCoachCtx(){
+  const done=STATE.completed.filter(id=>id!=='root');
+  const avail=SKILLS.filter(s=>!isCompleted(s.id)&&s.id!=='root'&&isAvailable(s));
+  let lv=1,xp=STATE.xp;const req=l=>100+(l-1)*75;
+  while(xp>=req(lv)){xp-=req(lv);lv++;}
+  const names=done.map(id=>{const s=SKILL_MAP[id];return s?s.name:id;}).join(', ')||'none';
+  return `You are an expert calisthenics coach in Calitree.
+User: Level ${lv}, ${STATE.xp} XP. Completed (${done.length}): ${names}.
+Available next: ${avail.map(s=>s.name).join(', ')||'none'}.
+Be concise (max 150 words), specific, encouraging.`;
+}
+// Chat history — saved to localStorage, restored on load
+const CHAT_KEY='cali_chat_v1';
+let _coachHist=[];
+try{
+  const saved=JSON.parse(localStorage.getItem(CHAT_KEY));
+  if(Array.isArray(saved))_coachHist=saved;
+}catch(e){}
+
+function saveChatHistory(){
+  try{localStorage.setItem(CHAT_KEY,JSON.stringify(_coachHist.slice(-40)));}catch(e){}
+}
+
+function clearChat(){
+  _coachHist=[];
+  saveChatHistory();
+  const msgs=document.getElementById('cp-messages');
+  msgs.innerHTML='';
+  const welcome=mk('div','cp-msg ai');
+  welcome.appendChild(mktx('div','cp-bubble','Chat cleared. Ask me anything about your training!'));
+  msgs.appendChild(welcome);
+}
+
+function restoreChatUI(){
+  if(!_coachHist.length)return;
+  const msgs=document.getElementById('cp-messages');
+  // Keep the initial welcome message, then append history
+  _coachHist.forEach(msg=>{
+    if(msg.role==='user'||msg.role==='assistant'){
+      const w=mk('div',`cp-msg ${msg.role==='user'?'user':'ai'}`);
+      const b=mktx('div','cp-bubble',msg.content);
+      w.appendChild(b);msgs.appendChild(w);
+    }
+  });
+  msgs.scrollTop=msgs.scrollHeight;
+}
+async function sendCoach(){
+  const inp=document.getElementById('cp-inp');const msg=inp.value.trim();if(!msg)return;
+  const key=getApiKey();if(!key){promptApiKey();return;}
+  inp.value='';addChatMsg('user',msg);
+  const typing=addChatMsg('ai','\u2026',true);
+  document.getElementById('cp-send').disabled=true;
+  _coachHist.push({role:'user',content:msg});
+  saveChatHistory();
+  try{
+    const res=await fetch(GROQ_URL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${key}`},body:JSON.stringify({model:GROQ_MODEL,messages:[{role:'system',content:buildCoachCtx()},..._coachHist],max_tokens:350,temperature:0.7})});
+    if(!res.ok){const err=await res.json();throw new Error(err.error?.message||`HTTP ${res.status}`);}
+    const data=await res.json();const reply=data.choices?.[0]?.message?.content||'No response';
+    _coachHist.push({role:'assistant',content:reply});
+    if(_coachHist.length>40)_coachHist=_coachHist.slice(-40);
+    saveChatHistory();
+    typing.querySelector('.cp-bubble').textContent=reply;typing.querySelector('.cp-bubble').classList.remove('loading');
+  }catch(e){typing.querySelector('.cp-bubble').textContent=`Error: ${e.message}`;}
+  document.getElementById('cp-send').disabled=false;
+  const msgs=document.getElementById('cp-messages');msgs.scrollTop=msgs.scrollHeight;
+}
+function addChatMsg(role,text,isLoading=false){
+  const msgs=document.getElementById('cp-messages');
+  const w=mk('div',`cp-msg ${role}`);
+  const b=mktx('div',`cp-bubble${isLoading?' loading':''}`,text);
+  const t=mktx('span','cp-time',new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}));
+  w.appendChild(b);w.appendChild(t);msgs.appendChild(w);msgs.scrollTop=msgs.scrollHeight;return w;
+}
+function quickMsg(m){document.getElementById('cp-inp').value=m;sendCoach();}
+function cpKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendCoach();}}
+
+const FIREBASE_CONFIG={apiKey:"AIzaSyCAAsutvPudd0EZfIXjBpj-2nQYKs4Yhsg",authDomain:"calitree-4704f.firebaseapp.com",projectId:"calitree-4704f",storageBucket:"calitree-4704f.firebasestorage.app",messagingSenderId:"947718327578",appId:"1:947718327578:web:f277b2d3b9d6834ab6b0a3"};
+let _fb={auth:null,db:null,user:null,ready:false};
+async function initFirebaseApp(){
+  try{
+    const[{initializeApp},{getAuth,onAuthStateChanged},{getFirestore,doc,getDoc,setDoc}]=await Promise.all([import('https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js'),import('https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js'),import('https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js')]);
+    const app=initializeApp(FIREBASE_CONFIG);
+    _fb.auth=getAuth(app);_fb.db=getFirestore(app);_fb.doc=doc;_fb.getDoc=getDoc;_fb.setDoc=setDoc;_fb.ready=true;
+    onAuthStateChanged(_fb.auth,async user=>{
+      _fb.user=user;
+      if(user){const name=user.displayName||user.email.split('@')[0];document.getElementById('h-username').textContent=name;await loadFromFirebase(user.uid);}
+      else{const u=localStorage.getItem('cali_username');if(u)document.getElementById('h-username').textContent=u;}
+    });
+  }catch(e){console.warn('Firebase offline:',e.message);}
+}
+async function loadFromFirebase(uid){
+  try{
+    const snap=await _fb.getDoc(_fb.doc(_fb.db,'users',uid));
+    if(snap.exists()){const remote=snap.data().progress;
+      if(remote&&Array.isArray(remote.completed)&&remote.completed.length>=STATE.completed.length){STATE=remote;if(!STATE.logs)STATE.logs={};if(!STATE.completed.includes('root'))STATE.completed.push('root');_completedSet=new Set(STATE.completed);saveState();buildTree();updateHeader();}
+      else await syncToFirebase();
+    }
+  }catch(e){console.warn('Load failed:',e.message);}
+}
+async function syncToFirebase(){
+  if(!_fb.ready||!_fb.user)return;
+  try{await _fb.setDoc(_fb.doc(_fb.db,'users',_fb.user.uid),{progress:{completed:STATE.completed,xp:STATE.xp,logs:STATE.logs}},{merge:true});}catch(e){console.warn('Sync failed:',e.message);}
+}
+async function handleLogout(){
+  await syncToFirebase();
+  if(_fb.auth&&_fb.user){const{signOut}=await import('https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js');await signOut(_fb.auth);}
+  localStorage.removeItem('cali_username');window.location.href='index.html';
+}
+
+function mk(tag,cls){const e=document.createElement(tag);if(cls)e.className=cls;return e;}
+function mktx(tag,cls,text){const e=mk(tag,cls);e.textContent=text;return e;}
+function mklbl(text){return mktx('div','m-label',text);}
+function mksec(children){const s=mk('div','m-section');children.forEach(c=>s.appendChild(c));return s;}
+function fmtDate(ts){return new Date(ts).toLocaleDateString(undefined,{month:'short',day:'numeric'});}
+let _toastT;
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(_toastT);_toastT=setTimeout(()=>t.classList.remove('show'),2600);}
+
+(function(){const u=localStorage.getItem('cali_username');if(u&&u!=='guest'){const el=document.getElementById('h-username');if(el)el.textContent=u;}})();
+buildTree();updateHeader();updateKeyStatus();initFirebaseApp();setTimeout(resetCam,80);restoreChatUI();
+</script>
+</body>
+</html>
